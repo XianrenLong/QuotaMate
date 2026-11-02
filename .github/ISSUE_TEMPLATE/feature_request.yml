@@ -1,0 +1,22 @@
+name: Feature request / 功能建议
+description: 说明希望解决的问题与使用场景。
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决什么问题？
+      description: 请描述实际使用场景，避免包含个人账号信息。
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 期望的行为
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: 官方接口依据或参考（可选）
+      description: 新增数据源时，优先提供官方文档和预期采集范围。

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: macOS checks and build
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Check public files
+        run: python3 scripts/check_public_files.py
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool
+      - name: Analyze
+        run: dart analyze
+      - name: Test application
+        run: flutter test
+      - name: Test release scripts
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - name: Build and test the native metadata relay
+        run: |
+          xcrun swiftc -O scripts/claude_statusline.swift -o "$RUNNER_TEMP/quotamate-claude-statusline"
+          python3 scripts/test_claude_statusline.py "$RUNNER_TEMP/quotamate-claude-statusline"
+      - name: Build macOS application
+        run: flutter build macos --release

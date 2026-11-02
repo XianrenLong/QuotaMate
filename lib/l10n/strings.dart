@@ -1,0 +1,488 @@
+enum AppLanguage { zh, en }
+
+/// Chinese source messages are stable keys. Templates use named placeholders;
+/// only application copy is translated, never account or project data.
+class AppStrings {
+  final AppLanguage language;
+  const AppStrings(this.language);
+  static final _templateEntries =
+      _english.entries.where((entry) => entry.key.contains('{')).toList()..sort(
+        (a, b) => b.key
+            .replaceAll(RegExp(r'\{\w+\}'), '')
+            .length
+            .compareTo(a.key.replaceAll(RegExp(r'\{\w+\}'), '').length),
+      );
+  static final _templates = _templateEntries.map((entry) {
+    final names = <String>[];
+    final pattern = StringBuffer('^');
+    var end = 0;
+    for (final match in RegExp(r'\{(\w+)\}').allMatches(entry.key)) {
+      pattern.write(RegExp.escape(entry.key.substring(end, match.start)));
+      pattern.write('(.+?)');
+      names.add(match[1]!);
+      end = match.end;
+    }
+    pattern.write(RegExp.escape(entry.key.substring(end)));
+    pattern.write(r'$');
+    return (RegExp(pattern.toString(), dotAll: true), names, entry.value);
+  }).toList();
+
+  String text(String source, [int depth = 0]) {
+    source = source.replaceAll('额度管家', 'QuotaMate');
+    if (language == AppLanguage.zh || depth > 5) return source;
+    final exact = _english[source];
+    if (exact != null) return exact;
+    final number = RegExp(r'^(\d+(?:\.\d+)?)(万|亿)$').firstMatch(source);
+    if (number != null) {
+      final value =
+          double.parse(number[1]!) * (number[2] == '万' ? 10000 : 100000000);
+      for (final unit in [(1e9, 'B'), (1e6, 'M'), (1e3, 'K')]) {
+        if (value >= unit.$1) {
+          return '${(value / unit.$1).toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '')}${unit.$2}';
+        }
+      }
+    }
+    for (final template in _templates) {
+      final match = template.$1.firstMatch(source);
+      if (match == null) continue;
+      var result = template.$3;
+      for (var i = 0; i < template.$2.length; i++) {
+        result = result.replaceAll(
+          '{${template.$2[i]}}',
+          text(match[i + 1]!, depth + 1),
+        );
+      }
+      return result;
+    }
+    // Tooltips can compose independent messages and chart values on new lines.
+    if (source.contains('\n')) {
+      return source.split('\n').map((line) => text(line, depth + 1)).join('\n');
+    }
+    return source;
+  }
+}
+
+const _english = <String, String>{
+  '该周期没有本机 Claude Code 记录，最近记录：{date}。\n网页与普通桌面聊天暂无 Token 明细。': 'No local Claude Code records in this period. Latest record: {date}.\nToken details for web and regular desktop chat are unavailable.',
+  "本地采集": "Local collection",
+  "额度数据来源": "Limit data source",
+  "仅读取本地快照，不主动请求 Claude 订阅额度。":
+      "Reads local snapshots only. Does not query Claude subscription limits.",
+  "账号已连接，仅核对本机登录状态。":
+      "Account connected. Only local sign-in status is checked.",
+  "状态栏额度采集": "Status line collection",
+  "正常使用终端 Claude Code 时采集；保留原状态栏，可随时关闭。": "Collects during normal terminal Claude Code use. Preserves your status line and can be turned off.",
+  "每分钟扫描本机记录，并读取已有额度快照。":
+      "Scans local records and reads existing limit snapshots every minute.",
+  "读取已有状态栏或桌面额度快照；不主动查询 Claude 订阅接口。": "Reads existing status line or desktop snapshots without querying Claude subscription limits.",
+  "读取本机登录状态与已有额度快照，不主动查询 Claude 订阅接口。": "Reads local sign-in status and existing snapshots without querying Claude subscription limits.",
+  "读取本地数据": "Read local data",
+  "读取额度快照": "Read limit snapshots",
+  "仅显示本地已采集的额度与重置时间": "Shows locally collected limits and reset times only",
+  "1分钟": "1 min",
+  "额度快照": "Limit snapshot",
+  "尚无额度快照": "No limit snapshot",
+  "快照 · {date} {time}": "Snapshot · {date} {time}",
+  "仅显示已采集的快照，不代表实时额度。": "Shows a recorded snapshot, not live limits.",
+  "Claude 历史额度快照": "Claude historical limit snapshot",
+  "Claude Code 本机登录状态": "Claude Code local sign-in status",
+  "尚无本地额度快照。可在设置启用状态栏采集，正常使用 Claude Code 后读取。": "No local limit snapshot. Enable status line collection in Settings, then read after normal Claude Code use.",
+  "额度来自本地快照，保留原采集时间；主动订阅查询已停用。": "Limits come from local snapshots with original timestamps. Active subscription queries are disabled.",
+  "暂时无法读取 Claude 本机状态，已保留上次数据。请检查工具路径和目录权限。": "Unable to read local Claude status. Previous data is kept. Check the executable path and directory permissions.",
+  "读取期间 Claude 账号已变化，请重新读取本地数据。":
+      "Your Claude account changed during reading. Read the local data again.",
+  "本机用量扫描已关闭，可在账号页开启。":
+      "Local usage scanning is off. Enable it on the Accounts page.",
+  "尚未发现本机 Claude Code 用量记录。": "No local Claude Code usage records were found.",
+  "正常使用终端 Claude Code 后刷新；网页与普通桌面聊天暂无 Token 明细。": "Refresh after normal terminal Claude Code use. Token details for web and regular desktop chat are unavailable.",
+  "该周期没有本机 Claude Code 记录，最近记录：{date}。":
+      "No local Claude Code records in this period. Latest record: {date}.",
+  "网页与普通桌面聊天暂无 Token 明细。":
+      "Token details for web and regular desktop chat are unavailable.",
+
+  '刷新额度': 'Refresh limits',
+  'Claude Code 官方额度': 'Claude Code official limits',
+  'Claude Code 查询快照': 'Claude Code query snapshot',
+  '历史快照剩余 {percent}% · 记录于 {time}':
+      'Snapshot remaining {percent}% · Recorded at {time}',
+  '历史快照剩余 {percent}%': 'Snapshot remaining {percent}%',
+  '历史快照 · {time}': 'Historical snapshot · {time}',
+  '{title}（快照）': '{title} (snapshot)',
+  '快照剩余': 'Snapshot',
+  '第三方认证': 'Third-party auth',
+  '此认证方式仅提供本机统计，不提供订阅额度。': 'This authentication method supports local statistics, not subscription limits.',
+  '停止等待': 'Stop waiting',
+  '停止等待不会关闭官方登录终端；完成后可手动刷新。': 'Stops waiting without closing the official sign-in terminal. Refresh after completing sign-in.',
+  '在终端打开 Claude Code 官方登录，账号和授权码仅由官方工具处理。': 'Opens official Claude Code sign-in in Terminal. Account details and authorization codes stay with the official tool.',
+  '已停止等待。官方终端中的登录可继续完成，之后刷新即可。': 'Stopped waiting. You can finish signing in in the official terminal, then refresh.',
+  'Claude 估算区分缓存读取与写入，按可用缓存时长计算；未计加速、区域及工具费用。': 'Claude estimates distinguish cache reads and writes by available cache duration. Excludes fast tiers, regional and tool fees.',
+  '输入 Token 减去缓存命中 Token；Claude 记录包含缓存写入。':
+      'Input minus cache hits. Claude records include cache writes.',
+  'Claude 数据目录': 'Claude data directory',
+  'Claude Code 工具': 'Claude Code executable',
+  '自动查找 Claude Code 或桌面应用附带工具':
+      'Find Claude Code or the executable bundled with Claude Desktop',
+  'Claude 账号连接': 'Claude connection',
+  '账号已连接，可启用额度采集。': 'Account connected. You can enable limit collection.',
+  '使用 Claude Code 官方登录流程，不保存登录令牌。': 'Uses the official Claude Code sign-in flow. Sign-in tokens are not stored.',
+  '额度采集': 'Limit collection',
+  '保留已有状态栏输出；新会话首个响应后更新五小时和每周额度。': 'Keeps your status line output. Updates 5-hour and weekly limits after the first response in a new session.',
+  '打开 Claude': 'Open Claude',
+  '登录 Claude Code': 'Sign in',
+  '取消连接': 'Cancel',
+  '已启用采集': 'Collector on',
+  '采集额度': 'Collect limits',
+  '取消正在进行的官方登录。': 'Cancel the current official sign-in.',
+  '登录由 Claude Code 官方工具完成；额度来自本机采集，不读取登录令牌。': 'Sign-in is handled by the official Claude Code executable. Limits come from local metadata; sign-in tokens are not read.',
+  'Claude Code 已连接': 'Claude Code connected',
+  'Claude Code 未登录': 'Claude Code signed out',
+  'Claude 未提供订阅到期日，可在官方订阅设置中核对。': 'Claude did not provide subscription expiry. Check your official subscription settings.',
+  'Claude Code 登录': 'Claude Code sign-in',
+  'Claude Code 状态栏快照': 'Claude Code status line snapshot',
+  'Claude 桌面用量快照': 'Claude Desktop usage snapshot',
+  'Claude 订阅额度': 'Claude subscription limits',
+  '本机 Claude 数据源': 'Local Claude source',
+  '添加 Claude 数据源': 'Add Claude source',
+  '使用 Claude Code 后，这里会显示消耗趋势。': 'Use Claude Code to see usage trends here.',
+  '读取 Claude Code 官方登录状态；额度来自匹配账号的桌面或状态栏快照。': 'Reads official Claude Code sign-in status. Limits come from matching desktop or status line snapshots.',
+  '请登录 Claude Code 后刷新。': 'Sign in to Claude Code, then refresh.',
+  '从 Claude Code 会话记录汇总，仅保存用量字段。': 'Summarized from Claude Code session logs. Only usage metadata is stored.',
+  '未找到 Claude Code，可在设置中指定路径。':
+      'Claude Code not found. Choose its executable in Settings.',
+  'Claude Code 尚未登录，本机历史已保留。可点击登录连接账号。': 'Claude Code is signed out. Local history is kept. Sign in to connect your account.',
+  '暂时无法同步 Claude，已保留上次数据。请检查 Claude Code 登录状态。':
+      'Claude sync failed. Previous data is kept. Check Claude Code sign-in.',
+  'Claude Code 登录完成，正在更新账号。':
+      'Claude Code sign-in completed. Updating account.',
+  'Claude Code 登录未完成，可重试。':
+      'Claude Code sign-in was not completed. You can retry.',
+  '无法启动 Claude Code 登录，请在设置中检查工具路径。': 'Could not start Claude Code sign-in. Check its executable path in Settings.',
+  '额度采集已启用，原状态栏输出会保留。请新开 Claude Code 会话，首个响应后刷新。': 'Limit collection enabled. Original status line output is kept. Start a new Claude Code session and refresh after its first response.',
+  '额度采集已关闭，原状态栏已恢复。':
+      'Limit collection disabled. Your original status line is restored.',
+  'Claude 状态栏已变化，未覆盖当前设置。':
+      'The Claude status line changed. Current settings were not overwritten.',
+  '未能配置额度采集。请先登录 Claude Code，确认配置可写；原设置已保留。': 'Could not configure collection. Sign in to Claude Code and check configuration permissions. Original settings are kept.',
+  '这个目录没有 Claude Code 会话记录，请选择包含 projects 的配置目录。': 'No Claude Code session logs in this folder. Choose a configuration folder containing projects.',
+  '本地优先 · GPT / Claude · macOS': 'Local first · GPT / Claude · macOS',
+  '原始日志会保留。已从磁盘删除的历史日志无法重新导入。': 'Original logs are kept. Logs already deleted from disk cannot be reimported.',
+  '其中缓存写入': 'Cache writes',
+  '{provider} 演示': '{provider} Demo',
+  '{provider} · {name}': '{provider} · {name}',
+  '{provider} {window}额度提醒': '{provider} {window} alert',
+  '{provider}-用量统计-{date}.csv': '{provider}-usage-{date}.csv',
+  '统计': 'Statistics',
+  '总览': 'Overview',
+  '账号': 'Accounts',
+  '提醒': 'Alerts',
+  '设置': 'Settings',
+  '界面语言': 'Language',
+  '简体中文': '简体中文',
+  'English': 'English',
+  '外观与语言': 'Appearance & language',
+  '主题模式': 'Appearance',
+  '浅色': 'Light',
+  '深色': 'Dark',
+  '跟随系统': 'System',
+  '选择浅色、深色，或跟随系统外观。': 'Choose light, dark or match your system.',
+  '即时生效，重启后保持选择。': 'Applies immediately and is saved for next launch.',
+  '展开侧栏': 'Expand sidebar',
+  '收起侧栏': 'Collapse sidebar',
+  '本地保存': 'Local storage',
+  '切换显示平台': 'Display provider',
+  'Claude · 后续接入': 'Claude · Coming soon',
+  '全部平台 · 后续接入': 'All providers · Coming soon',
+  '刷新额度（⌘R）': 'Refresh limits (⌘R)',
+  '查看设置': 'Open settings',
+  '退出演示，读取真实数据': 'Exit demo and load real data',
+  '本地运行': 'Runs locally',
+  '仅统计本机记录 · 估算不代表订阅扣费':
+      'Local records only · Estimates are not subscription charges',
+  '本机历史记录与账号额度分别统计': 'Local usage and account limits are tracked separately',
+  '数据来源': 'Data sources',
+  '账号额度': 'Account limits',
+  '尚未获取': 'Not available yet',
+  '这是示例账号，不是你的登录账号。': 'This is a demo account, not your signed-in account.',
+  '读取所选目录的 Codex CLI 登录；桌面应用独立切换的账号可能不同。': 'Uses the Codex CLI login in the selected directory. The desktop app may use a different account.',
+  '请在 Codex 登录后刷新。': 'Sign in to Codex, then refresh.',
+  '本机历史': 'Local history',
+  '从 Codex 会话记录汇总，仅保存用量字段。':
+      'Summarized from local Codex sessions. Only usage metadata is stored.',
+  '其他电脑和云端任务可能没有对应的本机记录。':
+      'Other computers and cloud tasks may not have local records.',
+  '费用估算': 'Cost estimate',
+  '使用你配置的模型参考单价。缺少价格时保持未知；订阅额度不换算为美元。': 'Uses your model reference prices. Missing prices stay unknown; subscription limits are not converted to dollars.',
+  '知道了': 'Got it',
+  '统计周期': 'Period',
+  '今日': 'Today',
+  '近7天': '7 days',
+  '近30天': '30 days',
+  '导出统计': 'Export statistics',
+  '自动刷新': 'Auto refresh',
+  '等价估算': 'API cost estimate',
+  '成本估算': 'Cost estimate',
+  '成本': 'Cost',
+  '配置模型价格': 'Set model prices',
+  '今日 · 参考价折算': 'Today · Reference prices',
+  '部分记录缺少单价': 'Some records have no price',
+  '今日用量按 API 参考价折算，不代表订阅实际扣费；小图显示近7天费用趋势。': 'Today’s usage at reference API prices, not actual subscription charges. The sparkline shows the last 7 days.',
+  '今日 Token': 'Today’s tokens',
+  '本机记录': 'Local records',
+  '今日用量记录': 'Today’s records',
+  '今日 · 本机记录': 'Today · Local records',
+  '暂无额度信息': 'Limits unavailable',
+  '本周剩余': 'Weekly remaining',
+  '较长窗口剩余': 'Long-window remaining',
+  '下次恢复': 'Next reset',
+  '当前额度窗口': 'Current limit window',
+  '活跃项目': 'Active projects',
+  '今日有记录': 'Active today',
+  '最近同步': 'Last synced',
+  '历史快照，刷新以确认': 'Cached · Refresh to confirm',
+  '用量趋势': 'Usage trend',
+  '记录数': 'Records',
+  '还没有用量记录': 'No usage yet',
+  '使用 Codex 后，这里会显示消耗趋势。': 'Use Codex to see usage trends here.',
+  '近期会话': 'Recent sessions',
+  '暂无会话': 'No sessions',
+  '只显示含用量的本机记录': 'Only local sessions with usage are shown',
+  '已连接数据源': 'Connected sources',
+  '演示账号': 'Demo account',
+  '个人账号': 'Personal account',
+  '当前查看': 'Viewing',
+  '本机 Codex 数据源': 'Local Codex source',
+  '独立数据目录': 'Separate data directory',
+  '示例账号': 'Sample account',
+  '已连接': 'Connected',
+  '历史快照': 'Cached snapshot',
+  '当前窗口剩余': 'Current window',
+  '添加 GPT 数据源': 'Add GPT source',
+  '等待首次获取': 'Waiting for first query',
+  '历史用量': 'Usage history',
+  '来自本机会话记录': 'From local session logs',
+  '账号额度与本机统计分别展示': 'Account limits and local usage are shown separately',
+  '账号详情': 'Account details',
+  '订阅有效期': 'Subscription expiry',
+  '额度重置': 'Resets',
+  '额度范围': 'Limit scope',
+  'Codex 订阅额度': 'Codex subscription limits',
+  '历史范围': 'History scope',
+  '这台电脑（未按账号归属）': 'This computer (not attributed to an account)',
+  '订阅等级': 'Plan',
+  '同步设置': 'Sync settings',
+  '同步账号额度': 'Sync account limits',
+  '显示剩余额度与重置时间': 'Show remaining limits and reset times',
+  '汇总本机用量': 'Collect local usage',
+  '保留模型与项目的用量统计': 'Keep model and project usage statistics',
+  '刷新间隔': 'Refresh interval',
+  '手动': 'Manual',
+  '立即同步': 'Sync now',
+  '查看数据来源': 'View data sources',
+  '未记录项目': 'Unknown project',
+  '记录次数': 'Records',
+  '累计 Token': 'Total tokens',
+  '缓存命中率': 'Cache hit rate',
+  '缓存命中率 = 缓存命中 Token ÷ 输入 Token（含缓存），不计输出 Token。没有输入用量时显示 —。': 'Cached input tokens ÷ total input tokens, excluding output. Shows — when there is no input usage.',
+  '每日用量': 'Daily usage',
+  '暂无统计': 'No statistics',
+  '选择其他时间范围，或同步本机记录。': 'Choose another period or sync local records.',
+  'Token 构成': 'Token breakdown',
+  '输入（含缓存）': 'Input (incl. cache)',
+  '输出': 'Output',
+  '合计': 'Total',
+  '用量明细': 'Usage details',
+  '导出': 'Export',
+  '暂无记录': 'No records',
+  '真实用量会在同步后显示。': 'Real usage appears after syncing.',
+  '会话 / 项目': 'Session / project',
+  '项目': 'Project',
+  '输入 Token': 'Input tokens',
+  '输出 Token': 'Output tokens',
+  '未配置单价': 'No price set',
+  '最近一条用量记录': 'Latest usage record',
+  '时间': 'Time',
+  '模型': 'Model',
+  '新增输入': 'New input',
+  '其中缓存': 'Cached input',
+  '其中推理': 'Reasoning output',
+  '速度': 'Speed',
+  '首字': 'First token',
+  '首字时间': 'Time to first token',
+  '未配置参考价格': 'No reference price',
+  '仅保存统计字段，不显示对话正文。':
+      'Only usage metadata is stored. Conversation content is not shown.',
+  '关闭': 'Close',
+  '暂无用量明细': 'No usage details',
+  '同步本机记录或选择其他时间范围。': 'Sync local records or choose another period.',
+  '本地时间；悬停可查看完整日期。': 'Local time. Hover for the full date.',
+  'API 等价估算，非订阅实际扣费。缺少模型单价时无法估算。': 'Reference API estimate, not actual subscription charges. Requires a model price.',
+  '输入 Token 减去缓存命中 Token。': 'Input tokens minus cached input tokens.',
+  '缓存命中': 'Cache hits',
+  '≈ 为按日志请求区间估算的平均输出速度，包含等待，尽量排除工具执行时间。少于 200 输出 Token 或时间不足时显示 —。': '≈ Estimated average output speed from log timing, including wait time and excluding tool execution where possible. Shows — for fewer than 200 output tokens or insufficient timing.',
+  '≈ 为请求起点至首个模型输出项（含思考）开始的估算延迟，依据 started_at_ms；并非精确网络首字测量。缺失时显示 —。': '≈ Estimated delay from request start to the first model output item (including reasoning), based on started_at_ms. Not an exact network TTFT measurement. Missing values show —.',
+  '请在设置中配置该模型的参考单价。': 'Set a reference price for this model in Settings.',
+  'API 等价估算，不代表实际扣费。': 'Reference API estimate, not actual charges.',
+  '额度提醒': 'Limit alerts',
+  '低额度通知': 'Low-limit notifications',
+  '额度低于阈值时，通过 macOS 通知提醒。':
+      'Notify through macOS when remaining usage falls below the threshold.',
+  '剩余额度阈值': 'Remaining threshold',
+  '当前窗口和较长窗口分别判断。': 'Current and longer windows are checked separately.',
+  '同一额度窗口只提醒一次。演示数据和过期快照不会触发通知。': 'One alert per limit window. Demo data and expired snapshots do not trigger notifications.',
+  '当前恢复时间': 'Upcoming resets',
+  '当前窗口': 'Current window',
+  '本周窗口': 'Weekly window',
+  '较长窗口': 'Longer window',
+  '尚未获取恢复时间': 'Reset time unavailable',
+  '暂不可用': 'Unavailable',
+  '提醒以平台返回的额度为准。每分钟读取本机新增记录，账号额度按所设间隔刷新。': 'Alerts use reported account limits. New local records are scanned each minute; account limits follow your refresh interval.',
+  '数据与同步': 'Data & sync',
+  'Codex 数据目录': 'Codex data directory',
+  '演示模式使用独立示例数据': 'Demo mode uses separate sample data',
+  '选择目录': 'Choose folder',
+  'Codex 工具': 'Codex executable',
+  '自动查找已安装的 Codex CLI / 桌面应用':
+      'Automatically find an installed Codex CLI or desktop app',
+  '指定路径': 'Choose file',
+  '本机记录每分钟扫描，账号额度按以下间隔刷新。': 'Local records are scanned each minute; account limits follow this interval.',
+  '额度刷新间隔': 'Limit refresh interval',
+  '5分钟': '5 min',
+  '10分钟': '10 min',
+  '30分钟': '30 min',
+  '模型参考定价': 'Model reference prices',
+  '添加单价': 'Add price',
+  '单位：美元 / 百万 Token。缺少价格时保持未知，估算不代表订阅扣费。': 'USD per million tokens. Missing prices stay unknown; estimates are not subscription charges.',
+  '价格来源': 'Pricing source',
+  '参考估算未计长上下文、加速档、缓存写入和工具费用；手动配置的价格优先。': 'Excludes long context, fast tiers, cache writes and tool fees. Your custom prices take priority.',
+  '尚未配置模型单价。Token 和额度统计可正常使用。':
+      'No model prices set. Token and limit tracking still work.',
+  '删除单价': 'Remove price',
+  '演示模式': 'Demo mode',
+  '只在本次打开时生效；重启后恢复真实数据。':
+      'Applies to this session only. Real data is restored after relaunch.',
+  '本地数据': 'Local data',
+  '用量字段保存在这台电脑，不保存对话正文或账号凭证。': 'Usage metadata stays on this computer. Conversation content and credentials are not stored.',
+  '打开文件夹': 'Open folder',
+  '脱敏诊断': 'Private diagnostics',
+  '仅复制版本、记录条数与连接状态，不含账号和路径。': 'Copies version, record count and connection state, without account details or paths.',
+  '复制诊断': 'Copy diagnostics',
+  '已复制脱敏诊断信息。': 'Private diagnostics copied.',
+  '清除统计缓存': 'Clear usage cache',
+  '清除已导入的统计，下次同步会从仍保留的本机日志重建。': 'Clears imported statistics. The next sync rebuilds them from remaining local logs.',
+  '清除缓存': 'Clear cache',
+  '本地优先 · GPT / Codex · macOS 首版': 'Local first · GPT / Codex · macOS',
+  '开源许可': 'Open-source licenses',
+  '清除本地统计缓存？': 'Clear local usage cache?',
+  '原始 Codex 日志会保留。已从磁盘删除的历史日志无法重新导入。': 'Original Codex logs are kept. Logs already deleted from disk cannot be reimported.',
+  '取消': 'Cancel',
+  '添加模型参考价格': 'Add model reference price',
+  '每百万 Token 的美元价格。缓存是输入的一部分，不会重复计费。': 'USD per million tokens. Cache hits are part of input and are not charged twice.',
+  '日志中的模型名称': 'Model name in logs',
+  '新增输入单价': 'New input price',
+  '缓存命中单价': 'Cached input price',
+  '输出单价': 'Output price',
+  '请填写此项': 'Required',
+  '请填写不小于 0 的数字': 'Enter a number greater than or equal to 0',
+  '保存': 'Save',
+  '历史快照，请刷新确认当前额度。': 'Cached snapshot. Refresh to confirm current limits.',
+  '历史快照，请刷新确认当前账号。': 'Cached snapshot. Refresh to confirm the current account.',
+  '当前额度窗口暂不可用。': 'Current limit window is unavailable.',
+  '额度暂不可用': 'Limits unavailable',
+  '剩余': 'Remaining',
+  'API Key 模式': 'API key mode',
+  '尚未获取账号邮箱': 'Account email unavailable',
+  '演示有效期。': 'Sample expiry date.',
+  '账号快照提供的订阅有效期；额度恢复时间和重置机会有效期均不代表订阅到期。': 'Subscription expiry from the account snapshot. Limit reset times and reset-credit expiry are not subscription expiry.',
+  '当前账号查询未提供订阅到期日；可在 ChatGPT 的订阅管理中核对。额度恢复时间和重置机会有效期均不代表订阅到期。': 'The account query did not provide subscription expiry. Check subscription management in ChatGPT. Limit resets and reset-credit expiry are separate.',
+  '显示当前可用的额度重置次数。接口未提供不代表次数为零。':
+      'Available limit resets. An unavailable count does not mean zero.',
+  '历史快照；显示当前可用的额度重置次数。接口未提供不代表次数为零。': 'Cached snapshot. Shows available limit resets; an unavailable count does not mean zero.',
+  '使用 1 次重置机会，重置后更新额度。': 'Use one reset credit, then refresh limits.',
+  '正在重置额度…': 'Resetting limits…',
+  '演示模式不使用真实重置次数。': 'Demo mode does not use real reset credits.',
+  '请先刷新，确认当前账号与可用次数。':
+      'Refresh to confirm the current account and available resets.',
+  '当前没有已确认的可用重置次数。': 'No confirmed reset credits available.',
+  '重置中…': 'Resetting…',
+  '重置额度': 'Reset limits',
+  '切换本软件查看的账号': 'Switch the account viewed in this app',
+  '添加账号数据源': 'Add account source',
+  '管理账号': 'Manage accounts',
+  '切换账号': 'Switch',
+  '历史订阅快照，刷新后确认当前等级。': 'Cached plan. Refresh to confirm the current plan.',
+  '订阅等级来自当前账号查询。': 'Plan from the current account query.',
+  '不适用': 'Not applicable',
+  '未登录': 'Signed out',
+  '已过期': 'Expired',
+  '无订阅': 'No subscription',
+  '接口未提供': 'Not provided',
+  '暂无可用次数': 'None available',
+  '订阅过期': 'Subscription expired',
+  '订阅未知': 'Plan unknown',
+  'Pro（档位未知）': 'Pro (tier unknown)',
+  '示例订阅': 'Sample plan',
+  '演示数据': 'Demo data',
+  '正在同步': 'Syncing',
+  '同步待重试': 'Sync failed',
+  '已同步': 'Synced',
+  '尚未连接': 'Not connected',
+  '未找到 Codex。可在设置中指定已安装的工具。':
+      'Codex not found. Choose the installed executable in Settings.',
+  '请先在 Codex 中登录，随后刷新额度。': 'Sign in to Codex, then refresh limits.',
+  'API Key 模式可统计本机用量，不提供订阅剩余百分比。': 'API key mode tracks local usage but does not provide subscription limits.',
+  '暂时无法完成同步，已保留上次数据。请检查 Codex 登录状态与网络。': 'Sync failed; previous data is kept. Check Codex sign-in and your network.',
+  '额度已重置。': 'Limits reset.',
+  '本次额度重置已完成，未重复使用次数。':
+      'This reset was already completed. No additional credit was used.',
+  '当前没有可重置的额度窗口，未使用重置次数。':
+      'No eligible limit window to reset. No credit was used.',
+  '当前没有可用的额度重置次数。': 'No reset credits available.',
+  'Codex 登录账号已变化，请先刷新确认账号，再重置额度。': 'The Codex account changed. Refresh to confirm it before resetting limits.',
+  '尚未确认重置结果，请刷新后重试；同一次操作不会重复使用次数。': 'Reset result is not confirmed. Refresh and retry; the same operation will not use another credit.',
+  'GPT 演示': 'GPT Demo',
+  '这个目录没有 Codex 会话记录，请选择包含 sessions 的配置目录。': 'No Codex session logs in this folder. Choose a configuration folder containing sessions.',
+  '通知未开启，可在系统设置中允许QuotaMate发送通知。': 'Notifications are off. Allow QuotaMate notifications in System Settings.',
+  '是': 'Yes',
+  '否': 'No',
+  '统计已导出。未包含对话内容和凭证。':
+      'Statistics exported without conversation content or credentials.',
+  '时间,模型,成本（USD估算）,新增输入,输出,缓存命中,速度（tok/s）,首字（秒）,计时是否估算': 'Time,Model,Estimated cost (USD),New input,Output,Cache hits,Speed (tok/s),First token (s),Estimated timing',
+  'Codex CLI 登录': 'Codex CLI sign-in',
+  '本机会话快照': 'Local session snapshot',
+  '未配置': 'Not configured',
+  '时间未提供': 'Time unavailable',
+  '等待额度更新': 'Waiting for updated limits',
+  '等待额度更新后重置': 'Waiting for updated limits',
+  '官方工具暂时无法返回额度，请稍后重试。': 'Codex could not return limits. Try again later.',
+  'Codex 查询超时，已保留上次数据。': 'Codex query timed out. Previous data is kept.',
+  '与 Codex 的连接已中断。': 'The Codex connection was interrupted.',
+  '查看数据设置': 'Open data settings',
+  '近{days}天有记录': 'Active in the last {days} days',
+  '项目用量 {count}': 'Projects {count}',
+  '最近同步 · {time}': 'Last synced · {time}',
+  '采集于 {time}': 'Checked {time}',
+  'GPT · {name}': 'GPT · {name}',
+  '账号 {number}': 'Account {number}',
+  '{time}后重置': 'Resets in {time}',
+  '{days}天{hours}小时': '{days}d {hours}h',
+  '{hours}小时{minutes}分': '{hours}h {minutes}m',
+  '{minutes}分钟': '{minutes} min',
+  '{percent}% 剩余': '{percent}% remaining',
+  '当前额度窗口剩余 {percent}%': 'Current window: {percent}% remaining',
+  '{count} 次可用': '{count} available',
+  '{date}（已到期）': '{date} (expired)',
+  '{count} 次': '{count} records',
+  '有 {count} 个记录文件暂未读取，其他统计已保留。':
+      '{count} log files could not be read. Other statistics are kept.',
+  '{message} 额度信息暂未更新，请刷新。':
+      '{message} Limits are not updated yet. Please refresh.',
+  '当前窗口剩余 {percent}% · {time}后重置': '{percent}% remaining · Resets in {time}',
+  'GPT {window}额度提醒': 'GPT {window} alert',
+  '剩余 {percent}%，{time}后重置。': '{percent}% remaining. Resets in {time}.',
+  'QuotaMate · {status}': 'QuotaMate · {status}',
+  '官方参考价 · {date} · Standard 基准档':
+      'Official reference · {date} · Standard tier',
+  '输入 {input} · 缓存 {cached} · 输出 {output}':
+      'Input {input} · Cached {cached} · Output {output}',
+  'GPT-用量统计-{date}.csv': 'GPT-usage-{date}.csv',
+};

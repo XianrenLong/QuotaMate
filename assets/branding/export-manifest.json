@@ -1,0 +1,57 @@
+{
+  "brand": "QuotaMate",
+  "direction": "额度沙漏",
+  "selected_on": "2026-10-30",
+  "master": "assets/branding/quotamate-hourglass-master.png",
+  "master_sha256": "5fa910ee143ed4e294ab89258828920ce40df961b12dc15cc2666cf7458cc8ad",
+  "artwork": "Built-in ImageGen; selected concept with transparent-margin export",
+  "encoding": "macOS sips resizing; PNG-wrapped ICO frames; no design reconstruction",
+  "exports": [
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "f1175f7e46b202640ed16268a2590c4a2f37a6b72e3cf238fec06ccb2a9fc0e9"
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "3e0a22238acf1cd2bd88244c1f80df9a8dfc36d5ac99267112c13167a50a93dc"
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png",
+      "width": 64,
+      "height": 64,
+      "sha256": "b346af169a9dd78f15bb5c535efcab4a6cf076813f008aa50d8eb87fea2e8379"
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png",
+      "width": 128,
+      "height": 128,
+      "sha256": "4945408563831e1122e633d9322f67b272a554d868f57fa016905e25b304e766"
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "bc3b888284f87a0089fbffa96433b861777b38bc04579980a281e46bea8829eb"
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png",
+      "width": 512,
+      "height": 512,
+      "sha256": "2c84ae1b79b6e049e1453a1c1813cf0719ceecd427b86f5d69f64b97dd50de33"
+    },
+    {
+      "path": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png",
+      "width": 1024,
+      "height": 1024,
+      "sha256": "5a5e704973cfd0ba8a0dd8b0ecc98a491288fe0448fa3cbde99a2a2e47b02456"
+    },
+    {
+      "path": "windows/runner/resources/app_icon.ico",
+      "sha256": "da98a90eeba5a7861b619892cfd15774da80fb0a9e0a527d46ab66967b80c29a"
+    }
+  ]
+}
