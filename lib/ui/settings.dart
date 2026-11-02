@@ -338,6 +338,13 @@ class SettingsPage extends StatelessWidget {
                 color: themeColor(context, C.muted),
                 lines: 2,
               ),
+              SizedBox(height: 6),
+              label(
+                '已内置默认参考单价，首次使用自动填入；同名手动价格优先。',
+                size: 12,
+                color: themeColor(context, C.muted),
+                lines: 2,
+              ),
               SizedBox(height: 8),
               Wrap(
                 crossAxisAlignment: WrapCrossAlignment.center,
@@ -407,6 +414,31 @@ class SettingsPage extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (c.isClaude)
+                  Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: label(
+                        '缓存写入：5分钟 ${price.cacheWrite5m ?? price.input * 1.25} · 1小时 ${price.cacheWrite1h ?? price.input * 2}',
+                        size: 11,
+                        color: themeColor(context, C.muted),
+                      ),
+                    ),
+                  ),
+                if (price.hasLongContextRate)
+                  Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: label(
+                        '输入超过 ${price.longContextThreshold} Token：输入 ${price.longContextInput} · 缓存 ${price.longContextCached} · 输出 ${price.longContextOutput}',
+                        size: 11,
+                        color: themeColor(context, C.muted),
+                        lines: 2,
+                      ),
+                    ),
+                  ),
               ],
             ],
           ),

@@ -1,6 +1,6 @@
 # QuotaMate 图文快速上手
 
-[返回项目首页](../README.md) · [直接下载 macOS DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg) · [版本说明](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.23-alpha)
+[返回项目首页](../README.md) · [直接下载 macOS DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.dmg) · [版本说明](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.24-alpha)
 
 这份指南面向第一次安装的用户。QuotaMate 用于整理支持的本机 AI 用量，不提供模型对话，也不会因登录就同步所有云端聊天历史。
 
@@ -19,10 +19,10 @@
 
 ## 下载与安装
 
-1. 点击 **[直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg)**，保存到下载文件夹。
+1. 点击 **[直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.dmg)**，保存到下载文件夹。
 2. 双击打开 DMG，将 **QuotaMate** 拖到 **Applications / 应用程序**。
 3. 从「应用程序」启动；若已安装旧版，先退出旧版再替换。
-4. 不想使用 DMG 时，可 [下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.zip)，解压后把 `QuotaMate.app` 放到「应用程序」。
+4. 不想使用 DMG 时，可 [下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.zip)，解压后把 `QuotaMate.app` 放到「应用程序」。
 
 安装包是 Alpha 开发测试包，仅有 ad-hoc 本地签名，未使用 Apple Developer ID 签名或公证。是否运行由你自行决定。
 
@@ -36,10 +36,10 @@
 
 ### 可选：检查下载是否完整
 
-将 [SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/SHA256SUMS) 与下载文件放在同一目录。在终端进入该目录后执行：
+将 [SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/SHA256SUMS) 与下载文件放在同一目录。在终端进入该目录后执行：
 
 ```sh
-shasum -a 256 QuotaMate-0.1.23-macos-universal.dmg
+shasum -a 256 QuotaMate-0.1.24-macos-universal.dmg
 ```
 
 将输出与 `SHA256SUMS` 中同名文件的值比较。若同时下载了 DMG 和 ZIP，也可执行 `shasum -a 256 -c SHA256SUMS` 一次检查两者；只下载一个时，完整清单会提示另一个文件缺失。校验值仅用于检查文件一致性，不等于 Apple 公证或安全认证。
@@ -151,7 +151,7 @@ QuotaMate 不要求你提供订阅令牌、Cookie 或授权码，也不会保存
 - **语言和主题：** 设置 → 外观与语言，支持中英文及浅色 / 深色 / 跟随系统，下次启动保留。
 - **项目统计：** 统计 → 项目用量；以所选时间范围内的本机记录汇总。
 - **CSV：** 统计页点击导出，选择保存位置。导出可能含项目名称等个人信息，分享前检查。
-- **参考价格：** 设置 → 模型参考定价。缺少价格时保持未知；修改单价会影响查看时的参考估算，不还原真实订阅账单。
+- **参考价格：** 设置 → 模型参考定价。首次安装自动带入 Claude 20 项、GPT 5 项默认值，无需逐条填写。手动价格优先；未知型号保持未配置。修改单价影响参考估算，不还原实际订阅账单。
 - **快捷键：** ⌘1 统计，⌘2 总览，⌘3 账号，⌘R 刷新，⌘E 导出，⌘, 设置。
 
 ## 更新与卸载

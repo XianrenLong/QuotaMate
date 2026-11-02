@@ -63,6 +63,10 @@ class AppStrings {
 }
 
 const _english = <String, String>{
+  "已内置默认参考单价，首次使用自动填入；同名手动价格优先。": "Reference defaults are built in and filled automatically on first use. Same-name custom prices take priority.",
+  "缓存写入：5分钟 {five} · 1小时 {hour}": "Cache write: 5 min {five} · 1 hour {hour}",
+  "输入超过 {threshold} Token：输入 {input} · 缓存 {cached} · 输出 {output}": "Above {threshold} input tokens: input {input} · cache {cached} · output {output}",
+
   "订阅周期（缓存）": "Period ends · cache",
   "订阅开始（本机）": "Started · local",
   "日期来源": "Date source",

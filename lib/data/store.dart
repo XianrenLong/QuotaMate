@@ -98,9 +98,10 @@ class LocalStore {
                             .where(
                               (price) =>
                                   price.model.startsWith('claude-') &&
-                                  (r['model'] as String).startsWith(
-                                    '${price.model}-20',
-                                  ),
+                                  ((r['model'] as String).startsWith(
+                                        '${price.model}-20',
+                                      ) ||
+                                      r['model'] == '${price.model}-latest'),
                             )
                             .firstOrNull)
                     ?.estimate(t),

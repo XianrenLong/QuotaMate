@@ -6,12 +6,12 @@
 <p align="center">为 macOS 打造的 GPT / Codex 与 Claude Code 本机用量面板。</p>
 <p align="center">
   <a href="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/version-0.1.23%20Alpha-3b82f6?style=flat-square" alt="0.1.23 Alpha">
+  <img src="https://img.shields.io/badge/version-0.1.24%20Alpha-3b82f6?style=flat-square" alt="0.1.24 Alpha">
   <img src="https://img.shields.io/badge/macOS-12%2B-334155?style=flat-square" alt="macOS 12+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="直接下载 macOS 通用版 DMG"></a>
+  <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="直接下载 macOS 通用版 DMG"></a>
 </p>
 <p align="center">
   <a href="#download">下载安装</a> · <a href="#first-run">第一次使用</a> · <a href="#connect-gpt">连接 GPT</a> · <a href="#connect-claude">连接 Claude</a> · <a href="#faq">常见问题</a> · <a href="README.en.md">English</a>
@@ -37,14 +37,14 @@
 
 ## 下载安装
 
-**当前版本：v0.1.23 Alpha · macOS 12+ · Apple Silicon / Intel 使用同一个安装包。** 原工具另有系统要求时，以其官方说明为准。
+**当前版本：v0.1.24 Alpha · macOS 12+ · Apple Silicon / Intel 使用同一个安装包。** 原工具另有系统要求时，以其官方说明为准。
 
 | 下载项 | 适合谁 | 链接 |
 | --- | --- | --- |
-| **DMG 安装包** · 约 27.7 MB | 大多数 Mac 用户，推荐 | **[点击直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg)** |
-| ZIP 压缩包 · 约 24.7 MB | 希望解压后手动放入应用程序 | [直接下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.zip) |
-| SHA256 校验文件 | 检查下载是否完整 | [下载校验文件](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/SHA256SUMS) |
-| 版本说明 | 查看更新内容与已知限制 | [打开 Release 页面](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.23-alpha) |
+| **DMG 安装包** · 约 27.7 MB | 大多数 Mac 用户，推荐 | **[点击直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.dmg)** |
+| ZIP 压缩包 · 约 24.7 MB | 希望解压后手动放入应用程序 | [直接下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.zip) |
+| SHA256 校验文件 | 检查下载是否完整 | [下载校验文件](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/SHA256SUMS) |
+| 版本说明 | 查看更新内容与已知限制 | [打开 Release 页面](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.24-alpha) |
 
 1. 下载并双击打开 **DMG**。
 2. 将 **QuotaMate** 拖入窗口中的 **Applications / 应用程序** 文件夹。
@@ -109,6 +109,12 @@
 - 日期读取不调用账单或订阅接口，不拿凭证发请求；原始令牌不会写入 QuotaMate 数据库、日志或上传。关闭开关后不再读取或展示这份额外元数据。
 
 本机缓存字段不是稳定的官方账单接口。缺失、身份不匹配或格式变化时仍显示未知；账号等级与重置权限以官方工具结果为准，不会因旧缓存日期已过就自动降级。[日期来源与隐私说明](docs/subscriptions.md#自动日期来源)
+
+## 内置默认单价
+
+**安装后无需逐个填写价格。** 新用户首次启动会自动带入 Claude 20 个型号和 GPT 原有 5 个型号的参考价，包含输入、缓存读取、输出与 Claude 缓存写入估算。Haiku 5.5 的长提示档位按每条记录自动选择。
+
+升级保留同名手动价格和已删除的旧条目。价格采用美元 / 百万 Token，不代表订阅实际扣费。[查看 Claude 完整默认表](docs/claude-reference-pricing.md) · [GPT 原有默认表](docs/reference-pricing.md)
 
 ## 看懂你的统计
 
@@ -224,4 +230,4 @@ bash scripts/package_macos.sh
 
 视觉风格参考 [FlClash](https://github.com/chen08209/FlClash)，日志计时参考 [CC Switch](https://github.com/farion1231/cc-switch) 并保留 MIT 声明；未引入 FlClash 的界面源码或代理内核。QuotaMate 与 OpenAI、Anthropic、FlClash 无官方隶属或背书关系。
 
-<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg"><strong>下载 QuotaMate for macOS →</strong></a></p>
+<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.dmg"><strong>下载 QuotaMate for macOS →</strong></a></p>

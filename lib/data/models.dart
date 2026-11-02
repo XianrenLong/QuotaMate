@@ -285,6 +285,8 @@ class ModelPrice {
   final String model;
   final double input, cached, output;
   final double? cacheWrite5m, cacheWrite1h;
+  final int? longContextThreshold;
+  final double? longContextInput, longContextCached, longContextOutput;
   const ModelPrice(
     this.model,
     this.input,
@@ -292,15 +294,28 @@ class ModelPrice {
     this.output, {
     this.cacheWrite5m,
     this.cacheWrite1h,
+    this.longContextThreshold,
+    this.longContextInput,
+    this.longContextCached,
+    this.longContextOutput,
   });
+  bool get hasLongContextRate =>
+      longContextThreshold != null &&
+      longContextInput != null &&
+      longContextCached != null &&
+      longContextOutput != null;
   double estimate(Tokens t) {
     final write = t.cacheCreation, hour = t.cacheCreation1h.clamp(0, write);
     final claude = model.startsWith('claude-');
-    return ((t.input - t.cached - write).clamp(0, t.input) * input +
-            t.cached * cached +
-            t.output * output +
-            (write - hour) * (cacheWrite5m ?? input * (claude ? 1.25 : 1)) +
-            hour * (cacheWrite1h ?? input * (claude ? 2 : 1))) /
+    final high = hasLongContextRate && t.input > longContextThreshold!;
+    final inputRate = high ? longContextInput! : input;
+    final cachedRate = high ? longContextCached! : cached;
+    final outputRate = high ? longContextOutput! : output;
+    return ((t.input - t.cached - write).clamp(0, t.input) * inputRate +
+            t.cached * cachedRate +
+            t.output * outputRate +
+            (write - hour) * (cacheWrite5m ?? inputRate * (claude ? 1.25 : 1)) +
+            hour * (cacheWrite1h ?? inputRate * (claude ? 2 : 1))) /
         1000000;
   }
 
@@ -311,6 +326,12 @@ class ModelPrice {
     'output': output,
     'cacheWrite5m': cacheWrite5m,
     'cacheWrite1h': cacheWrite1h,
+    if (hasLongContextRate) ...{
+      'longContextThreshold': longContextThreshold,
+      'longContextInput': longContextInput,
+      'longContextCached': longContextCached,
+      'longContextOutput': longContextOutput,
+    },
   };
   factory ModelPrice.fromJson(Json j) => ModelPrice(
     j['model'],
@@ -319,6 +340,10 @@ class ModelPrice {
     (j['output'] as num).toDouble(),
     cacheWrite5m: (j['cacheWrite5m'] as num?)?.toDouble(),
     cacheWrite1h: (j['cacheWrite1h'] as num?)?.toDouble(),
+    longContextThreshold: (j['longContextThreshold'] as num?)?.toInt(),
+    longContextInput: (j['longContextInput'] as num?)?.toDouble(),
+    longContextCached: (j['longContextCached'] as num?)?.toDouble(),
+    longContextOutput: (j['longContextOutput'] as num?)?.toDouble(),
   );
 }
 
