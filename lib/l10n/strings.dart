@@ -63,6 +63,30 @@ class AppStrings {
 }
 
 const _english = <String, String>{
+  "订阅周期（缓存）": "Period ends · cache",
+  "订阅开始（本机）": "Started · local",
+  "日期来源": "Date source",
+  "订阅开始": "Subscription started",
+  "本机 Codex 登录缓存": "Local Codex sign-in cache",
+  "Claude 本机配置": "Local Claude configuration",
+  "自动读取订阅日期": "Read subscription dates automatically",
+  "从本机配置读取订阅开始时间；缺少周期时不推算到期。": "Reads subscription start metadata locally. Does not infer an end without a billing period.",
+  "本机解析登录缓存的订阅日期；不保存、不上传凭证。": "Reads subscription dates from the local sign-in cache. Credentials are neither stored nor uploaded.",
+  "账号接口提供的订阅有效期；额度恢复时间和登录凭证有效期不代表订阅到期。": "Subscription expiry provided by the account interface. Quota resets and token expiry are different dates.",
+  "当前数据源未提供订阅日期；可在官方订阅管理中核对。": "This source has no subscription dates. Check the official subscription manager.",
+  "来源：本机 Codex 登录缓存的订阅字段。":
+      "Source: subscription metadata in the local Codex sign-in cache.",
+  "来源：Claude 本机配置的订阅元数据。":
+      "Source: subscription metadata in the local Claude configuration.",
+  "订阅开始：{date}": "Subscription started: {date}",
+  "本期截至：{date}": "Current period ends: {date}",
+  "元数据核对时间：{date}": "Metadata checked: {date}",
+  "周期结束不等于停止订阅；自动续费及实际状态以官方账单为准。": "A period end does not mean the subscription stops. Check official billing for renewal and status.",
+  "未提供计费周期和结束日，未按一个月推算到期。":
+      "No billing period or end is provided. No one-month expiry is inferred.",
+  "缓存日期已过，等待原工具更新；不据此判定订阅过期。": "The cached date has passed. Waiting for the original tool to update; this does not mark the plan expired.",
+  "{date}（待更新）": "{date} (stale)",
+
   '该周期没有本机 Claude Code 记录，最近记录：{date}。\n网页与普通桌面聊天暂无 Token 明细。': 'No local Claude Code records in this period. Latest record: {date}.\nToken details for web and regular desktop chat are unavailable.',
   "本地采集": "Local collection",
   "额度数据来源": "Limit data source",

@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import '../app_info.dart';
 import 'models.dart';
 import 'quota_reset.dart';
+import 'subscription_dates.dart';
 
 class CodexRpc {
   static Future<String?> locate([String? configured]) async {
@@ -28,21 +29,45 @@ class CodexRpc {
     return null;
   }
 
-  static Future<AccountSnapshot> read(String executable, String root) =>
-      _withClient(executable, root, (request) async {
-        final accountResult = await request('account/read', {
-          'refreshToken': false,
-        });
-        final account = accountResult['account'] as Map?;
-        final limits = account?['type'] == 'chatgpt'
-            ? await request('account/rateLimits/read')
-            : null;
-        return AccountSnapshot.fromRpc(
-          accountResult,
-          limits,
-          observed: DateTime.now(),
+  static Future<AccountSnapshot> read(
+    String executable,
+    String root, {
+    bool readSubscriptionDates = true,
+  }) => _withClient(executable, root, (request) async {
+    final accountResult = await request('account/read', {
+      'refreshToken': false,
+    });
+    final account = accountResult['account'] as Map?;
+    final limits = account?['type'] == 'chatgpt'
+        ? await request('account/rateLimits/read')
+        : null;
+    final dates = readSubscriptionDates && account is Map
+        ? await SubscriptionDateReader.codex(
+            root,
+            Map<String, dynamic>.from(account),
+          )
+        : null;
+    if (dates != null) {
+      final check = await request('account/read', {'refreshToken': false});
+      final current = check['account'];
+      if (current is! Map ||
+          [
+            'type',
+            'email',
+            'planType',
+            'workspaceName',
+          ].any((key) => current[key] != account?[key])) {
+        throw StateError(
+          'Codex account changed while reading subscription dates',
         );
-      });
+      }
+    }
+    return AccountSnapshot.fromRpc(
+      accountResult,
+      limits,
+      observed: DateTime.now(),
+    ).withSubscriptionDates(dates);
+  });
 
   static Future<QuotaResetResult> resetQuota(
     String executable,

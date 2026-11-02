@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 
 import 'models.dart';
+import 'subscription_dates.dart';
 
 class ClaudeAccountChanged implements Exception {}
 
@@ -36,6 +37,7 @@ class ClaudeConnection {
           observed: value.observed,
           source: cachedSource,
           identityFingerprint: value.identityFingerprint,
+          subscriptionDates: value.subscriptionDates,
         )
       : value;
   static String get defaultRoot =>
@@ -289,6 +291,7 @@ class ClaudeConnection {
     Future<Json> Function(String, String)? authenticate,
     AccountSnapshot? cachedAccount,
     String? historyPath,
+    bool readSubscriptionDates = true,
   }) async {
     final now = DateTime.now();
     final settings = await readJson(p.join(root, 'settings.json'));
@@ -361,6 +364,9 @@ class ClaudeConnection {
                 identityFingerprint: identity,
               )
             : null;
+        final dates = readSubscriptionDates
+            ? await SubscriptionDateReader.claude(root, auth)
+            : null;
         // Re-check local identity before attributing a snapshot to the account.
         final after = await (authenticate ?? authStatus)(executable!, root);
         if (after['loggedIn'] != true || identityHash(after) != identity) {
@@ -375,7 +381,7 @@ class ClaudeConnection {
               ..sort((a, b) => b.observed.compareTo(a.observed));
         if (candidates.isNotEmpty) account = candidates.first;
         return ClaudeConnectionResult(
-          account,
+          account.withSubscriptionDates(dates),
           true,
           enabled,
           notice: candidates.isEmpty

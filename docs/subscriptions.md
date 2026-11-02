@@ -20,6 +20,19 @@ Claude 自 v0.1.19 使用独立计划命名空间：Free 灰色、Pro 蓝色、M
 
 2026-11-01 再次排查：当前已安装 CLI 的 `GetAccountResponse` schema 中，ChatGPT 账号属性只有 `email`、`planType`、`type`、`workspaceName`。直接调用 `account/read` 的实际账号响应同样仅包含这四个属性，没有任何订阅、续费、到期日期字段；排查过程只输出字段名称和是否存在日期，不输出账号值或凭证。当前程序不是漏显示日期，而是此数据源没有提供。`subscriptionExpiresAt` 的兼容读取仍保留；`account/rateLimits/read` 的 `resetsAt` 表示额度恢复时间，重置权益中的 `expiresAt` 表示那份权益的有效期，都不能作为订阅到期日。参见 [OpenAI 官方账号接口说明](https://learn.chatgpt.com/docs/app-server#1-check-auth-state)。
 
+## 自动日期来源
+
+v0.1.23 补充检查发现：虽然 `account/read` 没有提供日期，Codex 已有本机登录缓存的 ID 令牌可能附带 `chatgpt_subscription_active_start`、`chatgpt_subscription_active_until` 和 `chatgpt_subscription_last_checked`。此前只检查账号接口，遗漏了这份数据。软件现在可自动提取这些字段，保留缓存来源和核对时间。
+
+- GPT 显示 **订阅周期（缓存）**，不是把 JWT `exp` 当作到期，也不是在线查询账单。
+- 必须与当前官方工具的类型、邮箱、计划匹配，缓存内部账号标识也须一致；读取后重新核对账号，切换期间不关联旧日期。
+- 这些是本机未做签名验证的显示元数据，不作为鉴权或权益判据。缺失、异常日期、外部令牌模式、未知字段和其他账号的数据均不采用。
+- Claude 从普通用户配置的 `oauthAccount.subscriptionCreatedAt` 自动读取开始时间，要求邮箱与组织匹配；默认配置和自定义目录隔离。不读取 Claude 的凭证文件。
+- Claude 的账号创建、试用结束、首次登录均不等于付费订阅日期。没有计费周期和结束日时，仅显示 **订阅开始（本机）**，不统一加一个月。
+- 关闭 **设置 → 自动读取订阅日期** 后，不再读取或展示额外本机日期元数据；官方账号接口若直接提供日期，仍保留原有兼容处理。
+
+只把日期和来源存入账号快照，原始凭证不写库、不输出、不上传、不被本软件用于发请求。缓存日期可能滞后，日期已过只提示待更新，不覆盖官方工具当前订阅等级，也不触发任何额度重置。隐私访问范围见 [SECURITY.md](../SECURITY.md)。
+
 总览：Pro 系列将原来的较长窗口卡片替换为今日用量记录；Plus 保留较长窗口。账号页同样采用此规则显示对应数据，账号列表和详情以彩色徽章显示订阅等级。非当前选中账号的等级来自该数据目录的已缓存快照，并标明历史状态。
 
 等级仅为展示，不更改订阅或登录。Pro 当前没有五小时限额的说明见 [官方 Codex 价格与用量文档](https://learn.chatgpt.com/docs/pricing#what-are-the-usage-limits-for-my-plan)。本机协议 enum 来自 Codex CLI 导出的 GetAccountResponse，核对日期 2026-11-01。

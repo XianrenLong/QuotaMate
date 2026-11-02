@@ -241,17 +241,13 @@ class OverviewAccountDetails extends StatelessWidget {
             LocalizedTooltip(
               message: c.demo
                   ? '演示有效期。'
-                  : c.account?.subscriptionExpiresAt != null
-                  ? '账号快照提供的订阅有效期；额度恢复时间和重置机会有效期均不代表订阅到期。'
-                  : c.isClaude
-                  ? 'Claude 未提供订阅到期日，可在官方订阅设置中核对。'
-                  : '当前账号查询未提供订阅到期日；可在 ChatGPT 的订阅管理中核对。额度恢复时间和重置机会有效期均不代表订阅到期。',
+                  : subscriptionDateExplanation(c.account, c.now),
               child: Row(
                 children: [
                   ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: compact ? 116 : 150),
                     child: label(
-                      '订阅有效期',
+                      subscriptionDateLabel(c.account),
                       size: 12,
                       color: themeColor(context, C.muted),
                     ),

@@ -581,9 +581,27 @@ class AccountsPage extends StatelessWidget {
                       for (final pair in [
                         MapEntry('账号', c.account?.email ?? '尚未获取'),
                         MapEntry(
-                          '订阅有效期',
+                          subscriptionDateLabel(c.account),
                           subscriptionValidityText(c.account, c.now),
                         ),
+                        if (c.account?.subscriptionDates != null)
+                          MapEntry(
+                            '日期来源',
+                            c.account!.subscriptionDates!.source ==
+                                    'codexLoginCache'
+                                ? '本机 Codex 登录缓存'
+                                : 'Claude 本机配置',
+                          ),
+                        if (c.account?.subscriptionDates?.startedAt != null &&
+                            c.account?.subscriptionDates?.periodEndsAt != null)
+                          MapEntry(
+                            '订阅开始',
+                            c.account!.subscriptionDates!.startedAt!
+                                .toLocal()
+                                .toString()
+                                .split(' ')
+                                .first,
+                          ),
                         MapEntry('额度重置', quotaResetText(c.account)),
                         MapEntry(
                           '额度范围',

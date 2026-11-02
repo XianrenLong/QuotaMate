@@ -2,6 +2,41 @@ import 'models.dart';
 
 enum SubscriptionTone { neutral, blue, gold }
 
+String subscriptionDateLabel(AccountSnapshot? account) {
+  if (account?.subscriptionExpiresAt != null) return '订阅有效期';
+  if (account?.subscriptionDates?.periodEndsAt != null) return '订阅周期（缓存）';
+  if (account?.subscriptionDates?.startedAt != null) return '订阅开始（本机）';
+  return '订阅有效期';
+}
+
+String _dateText(DateTime value) {
+  final local = value.toLocal();
+  return '${local.year}.${local.month.toString().padLeft(2, '0')}.${local.day.toString().padLeft(2, '0')}';
+}
+
+String subscriptionDateExplanation(AccountSnapshot? account, DateTime now) {
+  if (account?.subscriptionExpiresAt != null) {
+    return '账号接口提供的订阅有效期；额度恢复时间和登录凭证有效期不代表订阅到期。';
+  }
+  final dates = account?.subscriptionDates;
+  if (dates == null) return '当前数据源未提供订阅日期；可在官方订阅管理中核对。';
+  final lines = <String>[
+    dates.source == 'codexLoginCache'
+        ? '来源：本机 Codex 登录缓存的订阅字段。'
+        : '来源：Claude 本机配置的订阅元数据。',
+    if (dates.startedAt != null) '订阅开始：${_dateText(dates.startedAt!)}',
+    if (dates.periodEndsAt != null) '本期截至：${_dateText(dates.periodEndsAt!)}',
+    if (dates.lastCheckedAt != null)
+      '元数据核对时间：${_dateText(dates.lastCheckedAt!)}',
+    if (dates.periodEndsAt != null)
+      '周期结束不等于停止订阅；自动续费及实际状态以官方账单为准。'
+    else
+      '未提供计费周期和结束日，未按一个月推算到期。',
+    if (dates.periodEndsAt?.isBefore(now) == true) '缓存日期已过，等待原工具更新；不据此判定订阅过期。',
+  ];
+  return lines.join('\n');
+}
+
 String subscriptionValidityText(AccountSnapshot? account, DateTime now) {
   if (account?.authMode == 'apiKey' || account?.authMode == 'thirdParty') {
     return '不适用';
@@ -15,7 +50,13 @@ String subscriptionValidityText(AccountSnapshot? account, DateTime now) {
   }
   final info = SubscriptionInfo.read(account, now);
   if (info.label == '订阅过期') return '已过期';
-  if (info.label == '无订阅') return '无订阅';
+  if (info.label == '无订阅' || info.label == 'Free') return '无订阅';
+  final dates = account?.subscriptionDates;
+  if (dates?.periodEndsAt != null) {
+    final date = _dateText(dates!.periodEndsAt!);
+    return dates.periodEndsAt!.isAfter(now) ? date : '$date（待更新）';
+  }
+  if (dates?.startedAt != null) return _dateText(dates!.startedAt!);
   return '接口未提供';
 }
 

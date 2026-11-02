@@ -218,6 +218,17 @@ class SettingsPage extends StatelessWidget {
             children: [
               MiniHeading('数据与同步', icon: LucideIcons.database),
               SizedBox(height: 20),
+              settingRow(
+                '自动读取订阅日期',
+                c.isClaude
+                    ? '从本机配置读取订阅开始时间；缺少周期时不推算到期。'
+                    : '本机解析登录缓存的订阅日期；不保存、不上传凭证。',
+                trailing: Toggle(
+                  c.readSubscriptionDates,
+                  c.busy || c.demo ? null : c.setSubscriptionDateReading,
+                ),
+              ),
+              Divider(height: 24),
               if (c.isClaude) ...[
                 settingRow(
                   '额度数据来源',

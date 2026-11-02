@@ -6,7 +6,9 @@ GPT 数据源连接的是独立 Codex CLI 的登录状态，尚未接入桌面�
 
 自 0.1.3 起，演示模式仅在本次运行生效，忽略旧版本持久化的演示开关。启动默认读取真实数据；示例邮箱采用 demo@quotamate.example，并明确显示“演示账号”。
 
-通过本机已经安装的 Codex App Server，调用 `initialize`、`account/read` 和 `account/rateLimits/read`。用户点击“重置额度”时，额外调用 `account/rateLimitResetCredit/consume` 消耗一份可用重置权益，再读取最新额度。后台刷新不会自动消耗重置权益。不创建 thread 或 turn，不发送模型请求，不自行读取或保存 auth.json、钥匙串和 refresh token。服务端响应只提取账号显示信息、额度窗口、可用重置次数与采集时间。
+通过本机已经安装的 Codex App Server，调用 `initialize`、`account/read` 和 `account/rateLimits/read`。用户点击“重置额度”时，额外调用 `account/rateLimitResetCredit/consume` 消耗一份可用重置权益，再读取最新额度。后台刷新不会自动消耗重置权益。不创建 thread 或 turn，不发送模型请求；额度查询由官方工具完成，不读取钥匙串，也不保存账号凭证。服务端响应只提取账号显示信息、额度窗口、可用重置次数与采集时间。
+
+v0.1.23 增加可关闭的自动订阅日期读取：在本机解析 Codex 登录缓存 ID 令牌的订阅日期字段，仅保留日期和来源，不使用该令牌联网、不保存或上传原始凭证。日期元数据与实时账号等级分开，不能从缓存日期推断当前订阅已过期。具体来源、身份校验和限制见 [订阅日期](subscriptions.md#自动日期来源)。
 
 官方协议：https://learn.chatgpt.com/docs/app-server#auth-endpoints
 

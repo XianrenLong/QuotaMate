@@ -33,6 +33,9 @@ Future<void> main() async {
             connection.account.primary != null ||
             connection.account.secondary != null,
         'source': connection.account.source,
+        'hasSubscriptionStart':
+            connection.account.subscriptionDates?.startedAt != null,
+        'subscriptionDateSource': connection.account.subscriptionDates?.source,
         'fiveHourRemaining': connection.account.primary?.remaining,
         'weeklyRemaining': connection.account.secondary?.remaining,
         'hasResetTime': connection.account.primary?.resets != null,

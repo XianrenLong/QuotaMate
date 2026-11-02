@@ -6,12 +6,12 @@
 <p align="center">为 macOS 打造的 GPT / Codex 与 Claude Code 本机用量面板。</p>
 <p align="center">
   <a href="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/version-0.1.22%20Alpha-3b82f6?style=flat-square" alt="0.1.22 Alpha">
+  <img src="https://img.shields.io/badge/version-0.1.23%20Alpha-3b82f6?style=flat-square" alt="0.1.23 Alpha">
   <img src="https://img.shields.io/badge/macOS-12%2B-334155?style=flat-square" alt="macOS 12+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="直接下载 macOS 通用版 DMG"></a>
+  <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="直接下载 macOS 通用版 DMG"></a>
 </p>
 <p align="center">
   <a href="#download">下载安装</a> · <a href="#first-run">第一次使用</a> · <a href="#connect-gpt">连接 GPT</a> · <a href="#connect-claude">连接 Claude</a> · <a href="#faq">常见问题</a> · <a href="README.en.md">English</a>
@@ -37,14 +37,14 @@
 
 ## 下载安装
 
-**当前版本：v0.1.22 Alpha · macOS 12+ · Apple Silicon / Intel 使用同一个安装包。** 原工具另有系统要求时，以其官方说明为准。
+**当前版本：v0.1.23 Alpha · macOS 12+ · Apple Silicon / Intel 使用同一个安装包。** 原工具另有系统要求时，以其官方说明为准。
 
 | 下载项 | 适合谁 | 链接 |
 | --- | --- | --- |
-| **DMG 安装包** · 约 27.7 MB | 大多数 Mac 用户，推荐 | **[点击直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.dmg)** |
-| ZIP 压缩包 · 约 24.7 MB | 希望解压后手动放入应用程序 | [直接下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.zip) |
-| SHA256 校验文件 | 检查下载是否完整 | [下载校验文件](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/SHA256SUMS) |
-| 版本说明 | 查看更新内容与已知限制 | [打开 Release 页面](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.22-alpha) |
+| **DMG 安装包** · 约 27.7 MB | 大多数 Mac 用户，推荐 | **[点击直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg)** |
+| ZIP 压缩包 · 约 24.7 MB | 希望解压后手动放入应用程序 | [直接下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.zip) |
+| SHA256 校验文件 | 检查下载是否完整 | [下载校验文件](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/SHA256SUMS) |
+| 版本说明 | 查看更新内容与已知限制 | [打开 Release 页面](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.23-alpha) |
 
 1. 下载并双击打开 **DMG**。
 2. 将 **QuotaMate** 拖入窗口中的 **Applications / 应用程序** 文件夹。
@@ -100,6 +100,16 @@
 
 </details>
 
+## 自动显示订阅日期
+
+默认开启 **设置 → 自动读取订阅日期**，不需要手工填写：
+
+- **GPT / Codex：** 在本机解析所选配置的登录缓存，仅提取订阅开始、周期结束和元数据核对日期。界面标为 **订阅周期（缓存）**；缓存可能滞后，周期结束不表示自动续费一定停止。
+- **Claude：** 从本机普通配置读取 **订阅开始（本机）**。未提供月付 / 年付周期和结束日时，不按一个月猜到期。
+- 日期读取不调用账单或订阅接口，不拿凭证发请求；原始令牌不会写入 QuotaMate 数据库、日志或上传。关闭开关后不再读取或展示这份额外元数据。
+
+本机缓存字段不是稳定的官方账单接口。缺失、身份不匹配或格式变化时仍显示未知；账号等级与重置权限以官方工具结果为准，不会因旧缓存日期已过就自动降级。[日期来源与隐私说明](docs/subscriptions.md#自动日期来源)
+
 ## 看懂你的统计
 
 ![用量统计：趋势、缓存命中、参考成本与逐条明细](screenshots/preview/statistics-gpt-dark-zh.png)
@@ -147,7 +157,7 @@
 <details>
 <summary><strong>显示旧账号、旧时间，或者“接口未提供”？</strong></summary>
 
-账号来自所选配置目录的官方工具登录；桌面切换账号不一定同步该目录。先核对数据源，再在官方工具中确认登录并刷新。快照保留原始时间，刷新不会把旧样本“变新”；接口未提供有效期、窗口或计时时，不会猜测数值。
+账号来自所选配置目录的官方工具登录；桌面切换账号不一定同步该目录。先核对数据源，再在官方工具中确认登录并刷新。快照保留原始时间，刷新不会把旧样本“变新”；接口或本机元数据未提供日期、窗口或计时时，不会猜测数值。
 
 </details>
 
@@ -214,4 +224,4 @@ bash scripts/package_macos.sh
 
 视觉风格参考 [FlClash](https://github.com/chen08209/FlClash)，日志计时参考 [CC Switch](https://github.com/farion1231/cc-switch) 并保留 MIT 声明；未引入 FlClash 的界面源码或代理内核。QuotaMate 与 OpenAI、Anthropic、FlClash 无官方隶属或背书关系。
 
-<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.dmg"><strong>下载 QuotaMate for macOS →</strong></a></p>
+<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg"><strong>下载 QuotaMate for macOS →</strong></a></p>

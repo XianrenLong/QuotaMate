@@ -4,11 +4,11 @@
 <p align="center">A macOS dashboard for GPT / Codex and Claude Code usage, cache, and reference costs.</p>
 <p align="center">
   <a href="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/version-0.1.22%20Alpha-3b82f6?style=flat-square" alt="0.1.22 Alpha">
+  <img src="https://img.shields.io/badge/version-0.1.23%20Alpha-3b82f6?style=flat-square" alt="0.1.23 Alpha">
   <img src="https://img.shields.io/badge/macOS-12%2B-334155?style=flat-square" alt="macOS 12+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
 </p>
-<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="Download the universal macOS DMG"></a></p>
+<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="Download the universal macOS DMG"></a></p>
 <p align="center"><a href="#download">Download</a> · <a href="#first-run">First run</a> · <a href="#connect-gpt">GPT / Codex</a> · <a href="#connect-claude">Claude</a> · <a href="#faq">FAQ</a> · <a href="README.md">简体中文</a></p>
 
 ![Claude statistics with synthetic seven-day data](screenshots/preview/statistics-claude-dark-en.png)
@@ -28,14 +28,14 @@ All previews use production Flutter components with synthetic accounts, fictiona
 
 ## Download and install
 
-**v0.1.22 Alpha · macOS 12+ · one universal package for Apple Silicon and Intel.** The original Codex / Claude tools may have higher system requirements.
+**v0.1.23 Alpha · macOS 12+ · one universal package for Apple Silicon and Intel.** The original Codex / Claude tools may have higher system requirements.
 
 | Package | Use | Direct link |
 | --- | --- | --- |
-| **DMG** · approximately 27.7 MB | Recommended for most users | **[Download DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.dmg)** |
-| ZIP · approximately 24.7 MB | Extract and move the app manually | [Download ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.zip) |
-| SHA256 checksums | Verify file consistency | [Download SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/SHA256SUMS) |
-| Release notes | Changes and limitations | [View release](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.22-alpha) |
+| **DMG** · approximately 27.7 MB | Recommended for most users | **[Download DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.dmg)** |
+| ZIP · approximately 24.7 MB | Extract and move the app manually | [Download ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/QuotaMate-0.1.23-macos-universal.zip) |
+| SHA256 checksums | Verify file consistency | [Download SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.23-alpha/SHA256SUMS) |
+| Release notes | Changes and limitations | [View release](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.23-alpha) |
 
 1. Download and open the DMG.
 2. Drag **QuotaMate** into **Applications**.
@@ -86,6 +86,16 @@ If available, **Reset quota** consumes one reset credit when you click it. Backg
 ![Claude local collection settings](screenshots/preview/settings-claude-dark-en.png)
 
 Collection preserves your original status line and can restore it when disabled. Snapshots retain their timestamps; refreshing does not turn old data into live data. Missing, expired, or identity-mismatched limits remain unknown. Desktop Code, Cowork, remote sessions, and other devices are not fully covered. Rebind status line collection after an account change.
+
+## Automatic subscription dates
+
+**Settings → Read subscription dates automatically** is on by default; no manual date entry is needed.
+
+- **GPT / Codex:** locally parses the selected official sign-in cache for subscription start, period-end, and last-checked dates. The UI labels the end as **Period ends · cache**. It is cached metadata, not a live billing confirmation or proof that renewal stops.
+- **Claude:** reads the subscription creation date from its ordinary local configuration and labels it **Started · local**. No monthly/yearly period or end is invented.
+- This feature makes no billing/subscription request and never uses a cached token for network requests. Raw credentials are not copied into the QuotaMate database, logged, or uploaded. Turn the setting off to stop reading and showing this extra metadata.
+
+Cached fields may be missing or change format. Account identity is checked, and an old period-end date never overrides the official tool's current plan or reset permissions. See [date provenance](docs/subscriptions.md#自动日期来源).
 
 ## Understand the numbers
 

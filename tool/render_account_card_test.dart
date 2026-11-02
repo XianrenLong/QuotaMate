@@ -105,6 +105,14 @@ void main() {
           source: c.isClaude ? 'Claude Code 状态栏快照' : 'Codex CLI 登录',
           identityFingerprint: c.isClaude ? 'sample-identity' : null,
           availableQuotaResets: c.isClaude ? null : 1,
+          subscriptionDates: SubscriptionDates(
+            startedAt: c.now.subtract(const Duration(days: 12)),
+            periodEndsAt: c.isClaude
+                ? null
+                : c.now.add(const Duration(days: 18)),
+            lastCheckedAt: c.now.subtract(const Duration(hours: 2)),
+            source: c.isClaude ? 'claudeProfile' : 'codexLoginCache',
+          ),
           primary: QuotaWindow(
             65,
             c.isClaude ? 300 : 10080,

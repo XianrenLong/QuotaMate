@@ -127,6 +127,38 @@ class QuotaWindow {
   };
 }
 
+class SubscriptionDates {
+  final DateTime? startedAt, periodEndsAt, lastCheckedAt;
+  final String source;
+  const SubscriptionDates({
+    this.startedAt,
+    this.periodEndsAt,
+    this.lastCheckedAt,
+    required this.source,
+  });
+  Json toJson() => {
+    'startedAt': startedAt?.toIso8601String(),
+    'periodEndsAt': periodEndsAt?.toIso8601String(),
+    'lastCheckedAt': lastCheckedAt?.toIso8601String(),
+    'source': source,
+  };
+  static SubscriptionDates? fromOptional(dynamic value) {
+    if (value is! Map ||
+        !['codexLoginCache', 'claudeProfile'].contains(value['source'])) {
+      return null;
+    }
+    DateTime? at(String key) => DateTime.tryParse(value[key]?.toString() ?? '');
+    final start = at('startedAt'), end = at('periodEndsAt');
+    if (start == null && end == null) return null;
+    return SubscriptionDates(
+      startedAt: start,
+      periodEndsAt: end,
+      lastCheckedAt: at('lastCheckedAt'),
+      source: value['source'],
+    );
+  }
+}
+
 class AccountSnapshot {
   final String? email, plan, authMode;
   final QuotaWindow? primary, secondary;
@@ -135,6 +167,7 @@ class AccountSnapshot {
   final String? subscriptionStatus;
   final String? identityFingerprint;
   final DateTime? subscriptionExpiresAt;
+  final SubscriptionDates? subscriptionDates;
   final int? availableQuotaResets;
   const AccountSnapshot({
     this.email,
@@ -147,6 +180,7 @@ class AccountSnapshot {
     this.subscriptionStatus,
     this.identityFingerprint,
     this.subscriptionExpiresAt,
+    this.subscriptionDates,
     this.availableQuotaResets,
   });
   Json toJson() => {
@@ -160,6 +194,7 @@ class AccountSnapshot {
     'subscriptionStatus': subscriptionStatus,
     'identityFingerprint': identityFingerprint,
     'subscriptionExpiresAt': subscriptionExpiresAt?.toIso8601String(),
+    'subscriptionDates': subscriptionDates?.toJson(),
     'availableQuotaResets': availableQuotaResets,
   };
   factory AccountSnapshot.fromJson(Json j) => AccountSnapshot(
@@ -175,6 +210,7 @@ class AccountSnapshot {
     subscriptionExpiresAt: DateTime.tryParse(
       j['subscriptionExpiresAt']?.toString() ?? '',
     ),
+    subscriptionDates: SubscriptionDates.fromOptional(j['subscriptionDates']),
     availableQuotaResets: (j['availableQuotaResets'] as num?)?.toInt(),
   );
   factory AccountSnapshot.fromRpc(
@@ -215,6 +251,21 @@ class AccountSnapshot {
     );
   }
   bool get signedIn => authMode != null;
+  AccountSnapshot withSubscriptionDates(SubscriptionDates? dates) =>
+      AccountSnapshot(
+        email: email,
+        plan: plan,
+        authMode: authMode,
+        primary: primary,
+        secondary: secondary,
+        observed: observed,
+        source: source,
+        subscriptionStatus: subscriptionStatus,
+        subscriptionExpiresAt: subscriptionExpiresAt,
+        availableQuotaResets: availableQuotaResets,
+        identityFingerprint: identityFingerprint,
+        subscriptionDates: dates,
+      );
 }
 
 class SourceProfile {

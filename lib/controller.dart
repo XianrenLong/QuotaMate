@@ -42,6 +42,7 @@ class AppController extends ChangeNotifier {
       quotaEnabled = true,
       autoRefresh = true,
       notifications = false;
+  bool readSubscriptionDates = true;
   int page = 0, days = 1, refreshMinutes = 5, threshold = 20;
   String? error, message, executable;
   List<SourceProfile> _allProfiles = [];
@@ -78,6 +79,7 @@ class AppController extends ChangeNotifier {
     quotaEnabled = s['quotaEnabled'] != false;
     autoRefresh = s['autoRefresh'] != false;
     notifications = s['notifications'] == true;
+    readSubscriptionDates = s['readSubscriptionDates'] != false;
     refreshMinutes = (s['refreshMinutes'] as int? ?? 5).clamp(1, 60);
     threshold = (s['threshold'] as int? ?? 20).clamp(1, 99);
     executable = s['executable'];
@@ -304,6 +306,9 @@ class AppController extends ChangeNotifier {
         if (isClaude && account != null) {
           account = ClaudeConnection.localSnapshot(account!);
         }
+        if (!readSubscriptionDates && account != null) {
+          account = account!.withSubscriptionDates(null);
+        }
       }
       all = store.events(
         profile.scope,
@@ -363,6 +368,7 @@ class AppController extends ChangeNotifier {
                 cli,
                 root,
                 cachedAccount: account,
+                readSubscriptionDates: readSubscriptionDates,
               );
               if (profile.scope == scope) {
                 account = result.account;
@@ -382,7 +388,11 @@ class AppController extends ChangeNotifier {
             if (cli == null) {
               error = '未找到 Codex。可在设置中指定已安装的工具。';
             } else {
-              final snapshot = await CodexRpc.read(cli, root);
+              final snapshot = await CodexRpc.read(
+                cli,
+                root,
+                readSubscriptionDates: readSubscriptionDates,
+              );
               if (profile.scope == scope) {
                 account = snapshot;
                 accountVerified = true;
@@ -569,7 +579,11 @@ class AppController extends ChangeNotifier {
         }
       }
       if (auth['loggedIn'] == true && !_claudeLoginCanceled && !_disposed) {
-        final result = await ClaudeConnection.read(cli, profile.root);
+        final result = await ClaudeConnection.read(
+          cli,
+          profile.root,
+          readSubscriptionDates: readSubscriptionDates,
+        );
         if (!_disposed) {
           account = result.account;
           accountVerified = true;
@@ -684,6 +698,7 @@ class AppController extends ChangeNotifier {
       'quotaEnabled': quotaEnabled,
       'autoRefresh': autoRefresh,
       'notifications': notifications,
+      'readSubscriptionDates': readSubscriptionDates,
       'refreshMinutes': refreshMinutes,
       'threshold': threshold,
       'executable': executable,
@@ -705,6 +720,17 @@ class AppController extends ChangeNotifier {
     update();
     save();
     _notify();
+  }
+
+  Future<void> setSubscriptionDateReading(bool enabled) async {
+    if (busy || demo) return;
+    setting(() {
+      readSubscriptionDates = enabled;
+      if (!enabled && account != null) {
+        account = account!.withSubscriptionDates(null);
+      }
+    });
+    if (enabled) await refresh();
   }
 
   Future<void> _syncLanguage() async {
