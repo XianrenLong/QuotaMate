@@ -1,58 +1,190 @@
-# QuotaMate
+<p align="center">
+  <img src="assets/branding/quotamate-hourglass.png" width="96" height="96" alt="QuotaMate 沙漏图标">
+</p>
+<h1 align="center">QuotaMate</h1>
+<p align="center"><strong>用量、缓存、参考成本，一眼看清。</strong></p>
+<p align="center">为 macOS 打造的 GPT / Codex 与 Claude Code 本机用量面板。</p>
+<p align="center">
+  <a href="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/version-0.1.22%20Alpha-3b82f6?style=flat-square" alt="0.1.22 Alpha">
+  <img src="https://img.shields.io/badge/macOS-12%2B-334155?style=flat-square" alt="macOS 12+">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="直接下载 macOS 通用版 DMG"></a>
+</p>
+<p align="center">
+  <a href="#download">下载安装</a> · <a href="#first-run">第一次使用</a> · <a href="#connect-gpt">连接 GPT</a> · <a href="#connect-claude">连接 Claude</a> · <a href="#faq">常见问题</a> · <a href="README.en.md">English</a>
+</p>
 
-[![CI](https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg)](https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/preview/overview-gpt-dark-zh.png">
+  <source media="(prefers-color-scheme: light)" srcset="screenshots/preview/overview-gpt-light-zh.png">
+  <img src="screenshots/preview/overview-gpt-light-zh.png" alt="QuotaMate 总览：账号额度、参考成本、本机用量和最近七天趋势">
+</picture>
+<p align="center"><sub>生产组件使用合成账号与七天示例数据渲染；不包含真实账号或对话。应用启动默认显示今日。</sub></p>
 
-[English](README.en.md) · [下载与版本说明](https://github.com/liuzilong200049-bot/QuotaMate/releases) · [问题反馈](https://github.com/liuzilong200049-bot/QuotaMate/issues)
+## 你可以用它做什么
 
-本地优先的 AI 额度与用量管理工具，当前为 **macOS Alpha**。分别查看 GPT / Codex 与 Claude 的账号信息、本机用量和参考成本，帮助理解额度使用情况。
-
-QuotaMate 是独立社区项目，与 OpenAI、Anthropic、FlClash 无官方隶属或背书关系。
-
-![统计页：合成数据预览](screenshots/preview/statistics-gpt-dark-zh.png)
-
-## 支持范围
-
-| 能力 | GPT / Codex | Claude |
+| 看清额度 | 了解用量 | 管理习惯 |
 | --- | --- | --- |
-| 本机用量明细与项目汇总 | 读取 Codex 本机日志 | 读取 Claude Code 终端日志 |
-| 订阅额度 | 通过用户安装的官方 Codex App Server 查询 | 仅读取已有状态栏或匹配账号的桌面本地快照 |
-| 账号信息 | 核对所选 Codex 配置目录的登录 | 核对官方 Claude Code 的本机登录状态 |
-| 额度重置 | 用户有可用权益时手动点击 | 不提供 |
-| 普通网页聊天的完整 Token 明细 | 不提供 | 不提供 |
+| GPT 订阅窗口、恢复时间；Claude 已采集的本地额度快照 | 输入 / 输出 / 缓存 Token、项目汇总、逐条记录和参考成本 | 今日 / 近 7 天 / 近 30 天，中英文、明暗主题和 CSV 导出 |
 
-**平台：** macOS 提供开发测试包，支持 Apple Silicon 和 Intel。Windows 只有工程脚手架，原生桥接及打包未完成；暂无 Windows 或 Linux 可用发行版。
+> [!IMPORTANT]
+> **QuotaMate 统计的是支持的本机记录。** 它不会把 ChatGPT 或 Claude 网页、普通桌面聊天的全部历史同步进来；也不提供模型对话服务。Claude 当前采用本地被动采集，不主动轮询订阅额度接口。
 
-Claude 不主动轮询订阅额度接口，不提取订阅令牌或代理模型请求。启用状态栏采集后，快照随正常 Claude Code 终端使用产生；刷新不会凭空补齐历史。桌面 Code、Cowork、远程任务及其他设备记录尚未完整覆盖。详见 [Claude 连接说明](docs/claude-connection.md)。
+<a id="download"></a>
 
-## 功能
+## 下载安装
 
-- 默认打开今日统计，可切换近 7 天 / 近 30 天；两平台数据与选择独立保存。
-- 用量明细显示模型、输入、输出、缓存、参考成本和可用计时字段，支持项目汇总与 CSV 导出。
-- 中英文界面，浅色、深色及跟随系统主题，macOS 菜单栏和可选低额度提醒。
-- 手动配置模型价格；费用和部分计时为参考估算，缺失字段保持未知。
-- 快照保留来源和采集时间，过期数据不冒充实时额度；历史记录不强行归属到当前账号。
+**当前版本：v0.1.22 Alpha · macOS 12+ · Apple Silicon / Intel 使用同一个安装包。** 原工具另有系统要求时，以其官方说明为准。
 
-![Claude 总览：合成数据预览](screenshots/preview/overview-claude-light-zh.png)
+| 下载项 | 适合谁 | 链接 |
+| --- | --- | --- |
+| **DMG 安装包** · 约 27.7 MB | 大多数 Mac 用户，推荐 | **[点击直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.dmg)** |
+| ZIP 压缩包 · 约 24.7 MB | 希望解压后手动放入应用程序 | [直接下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.zip) |
+| SHA256 校验文件 | 检查下载是否完整 | [下载校验文件](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/SHA256SUMS) |
+| 版本说明 | 查看更新内容与已知限制 | [打开 Release 页面](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.22-alpha) |
 
-所有预览图均由生产 Flutter 组件使用合成账号、虚构路径和假数据生成，不包含真实账号或会话。它们是组件渲染预览，不是安装版原生窗口的手工操作截图。
+1. 下载并双击打开 **DMG**。
+2. 将 **QuotaMate** 拖入窗口中的 **Applications / 应用程序** 文件夹。
+3. 从「应用程序」打开 QuotaMate；更新时请先退出旧版，再替换原应用。
+4. 首次使用按下面的步骤选择数据源，正常使用原工具后刷新。
 
-## 安装与使用
+> [!NOTE]
+> 这是 **Alpha 开发测试包**，尚无 Apple Developer ID 签名及公证。若系统提示无法验证开发者，请先查看 [首次打开说明](docs/quick-start.md#macos-first-open)，再决定是否试用。Windows / Linux 暂无可用发行版。
 
-从 [Releases](https://github.com/liuzilong200049-bot/QuotaMate/releases) 下载最新 macOS Alpha 包，退出旧版后覆盖安装。当前下载包仅有本地 ad-hoc 开发签名，未做 Apple Developer ID 签名和公证，不是正式签名发行版；也可按下文自行编译。
+<a id="first-run"></a>
 
-1. 本机安装并登录官方 Codex 或 Claude Code；历史日志的读取不要求当前登录。
-2. 右上角选择 GPT / Claude。数据目录或工具路径不同时，可在设置中指定。
-3. 使用原工具产生正常用量记录，再回到 QuotaMate 刷新。
-4. Claude 额度采集需要在设置主动启用状态栏转发器。该采集方式针对终端会话，并非普通桌面聊天。关闭可恢复原状态栏。
+## 第一次使用
 
-若统计为空，先核对时间范围、所选数据目录以及是否存在对应本机日志。只登录账号不会同步云端 Token 历史。费用估算不代表订阅实际扣费；完整口径见 [数据来源](docs/data-sources.md)。
+**安装 QuotaMate 不需要 Flutter、Python 或 API Key。** 需要在本机已有对应的官方 Codex / Claude Code 工具；查看旧日志不要求当前登录。
 
-快捷键：⌘1 统计、⌘2 总览、⌘3 账号、⌘R 刷新、⌘E 导出、⌘, 设置。
+| 步骤 | 在哪里操作 | 你会看到什么 |
+| --- | --- | --- |
+| **① 选择平台** | 窗口右上角选择 **GPT** 或 **Claude** | 两个平台分别显示，不会混在一起 |
+| **② 核对连接** | 打开左侧 **账号**，必要时在 **设置** 指定工具与数据目录 | 当前工具的登录信息、数据来源和快照状态 |
+| **③ 正常使用原工具** | 在 Codex / Claude Code 中继续原本的工作 | 原工具产生本机用量日志 |
+| **④ 回来查看统计** | 点击右上角刷新，再选择 **今日 / 近7天 / 近30天** | 用量明细、趋势、项目汇总及参考成本 |
 
-## 从源码运行
+**安装后仍是空白？** 先看时间范围，再看所选目录是否存在本机记录。仅登录账号不会生成 Token 历史。[查看逐步排查方法 →](docs/quick-start.md#empty-statistics)
 
-已验证基准：Flutter **3.47.7** / Dart **3.13.5**，macOS、Xcode。Python 3 仅用于开发检查及打包，不是应用运行依赖。
+<a id="connect-gpt"></a>
+
+### 连接 GPT / Codex
+
+1. 安装并登录官方 [Codex CLI](https://learn.chatgpt.com/docs/cli)，或本机包含 Codex 工具的 [ChatGPT / Codex 桌面应用](https://learn.chatgpt.com/docs/app)。
+2. 在 QuotaMate 右上角选 **GPT**，点击刷新，并在 **账号** 页核对邮箱与订阅等级。
+3. 默认读取 `~/.codex`；使用其他配置目录时，在 **设置 → Codex 数据目录 → 选择目录** 中选择配置根目录。
+4. 提示未找到工具时，进入 **设置 → Codex 工具 → 指定路径**，选择已安装的可执行文件。
+
+额度反映所选 Codex 配置目录对应的官方工具账号。桌面应用独立切换的账号可能不同；本机历史也不强行归属于当前登录邮箱。[完整连接步骤与成功标志 →](docs/quick-start.md#connect-gpt)
+
+<a id="connect-claude"></a>
+
+### 连接 Claude Code
+
+1. 按 [官方快速开始](https://code.claude.com/docs/en/quickstart) 安装 Claude Code；在 QuotaMate 右上角选 **Claude**。
+2. 在 **设置 → Claude 账号连接** 点击 **登录 Claude Code**，通过打开的官方终端和浏览器完成登录；已登录时点击 **读取本地数据**。
+3. 要显示额度快照，在 **设置 → 状态栏额度采集** 主动开启采集，再在**新开的终端 Claude Code 会话**中正常使用，之后回到 QuotaMate 读取。
+4. 默认日志目录为 `~/.claude`。采集会保留原状态栏输出，关闭可恢复原设置。
+
+**Claude 的 Token 统计来自本机终端日志，额度来自已有快照。** 普通网页 / 桌面聊天没有逐请求 Token 明细；桌面 Code、Cowork 和远程会话尚未完整适配。[完整设置、限制与排查 →](docs/quick-start.md#connect-claude)
+
+<details>
+<summary><strong>展开查看 Claude 采集设置</strong></summary>
+
+![Claude 设置：本地采集、账号连接与状态栏采集开关](screenshots/preview/settings-claude-dark-zh.png)
+
+示例路径为虚构目录。请在自己的软件中核对实际设置，不要把别人的目录或账号信息复制进去。
+
+</details>
+
+## 看懂你的统计
+
+![用量统计：趋势、缓存命中、参考成本与逐条明细](screenshots/preview/statistics-gpt-dark-zh.png)
+
+| 字段 | 含义 |
+| --- | --- |
+| **成本估算 / 等价估算** | 按配置的 API 参考单价折算，不是订阅实际扣费 |
+| **累计 Token** | 当前时间范围的输入与输出总量；缓存已包含在输入中 |
+| **缓存命中率** | 缓存命中 Token ÷ 输入 Token，不包含输出 |
+| **记录次数** | 本机含用量的记录数，不等同于官方结算请求数 |
+| **速度 / 首字** | 有可靠字段时显示；`≈` 表示估算，缺失时显示 `—` |
+| **快照剩余** | 采集时刻的额度，需结合来源和时间查看，不代表实时查询 |
+
+点击 **项目用量** 可查看项目汇总；点击 **导出** 保存当前范围的 CSV。[详细统计口径 →](docs/data-sources.md)
+
+<details>
+<summary><strong>浅色、深色与英文界面</strong></summary>
+
+主题和语言在 **设置 → 外观与语言** 中即时切换，并在下次启动保留。
+
+![浅色 Claude 总览](screenshots/preview/overview-claude-light-zh.png)
+
+![英文统计界面](screenshots/preview/statistics-claude-dark-en.png)
+
+</details>
+
+<a id="faq"></a>
+
+## 常见问题
+
+<details>
+<summary><strong>已经登录，为什么统计还是 0？</strong></summary>
+
+账号登录、订阅额度和本机 Token 历史是三种不同的数据。先切换 **近7天 / 近30天**，再核对日志目录和记录是否来自支持的客户端。旧记录可能不在当前范围内。网页或其他设备的用量不会因登录自动补齐。[完整排查](docs/quick-start.md#empty-statistics)
+
+</details>
+
+<details>
+<summary><strong>Claude 已连接，为什么仍没有额度？</strong></summary>
+
+当前不主动请求 Claude 订阅额度。只有身份匹配的本地状态栏 / 桌面快照可供显示；缺少、过期或无法确认身份时保持未知。终端状态栏采集需主动开启，并在正常的新终端会话中产生快照。普通桌面聊天不保证产生它。[Claude 数据来源](docs/claude-connection.md)
+
+</details>
+
+<details>
+<summary><strong>显示旧账号、旧时间，或者“接口未提供”？</strong></summary>
+
+账号来自所选配置目录的官方工具登录；桌面切换账号不一定同步该目录。先核对数据源，再在官方工具中确认登录并刷新。快照保留原始时间，刷新不会把旧样本“变新”；接口未提供有效期、窗口或计时时，不会猜测数值。
+
+</details>
+
+<details>
+<summary><strong>会上传聊天内容吗？会自动消耗重置次数吗？</strong></summary>
+
+QuotaMate 没有自己的云端服务或遥测端点，不把对话正文、模型回答、工具参数或 OAuth 凭证保存到应用数据库。官方 CLI 仍可能按其自身行为访问服务商。GPT 的重置权益仅在用户有可用次数并点击 **重置额度** 后消耗一次，后台刷新不会自动消耗。[隐私与存储](SECURITY.md)
+
+</details>
+
+<details>
+<summary><strong>是否保证不封号？</strong></summary>
+
+不能保证。软件是独立开源项目，不代表服务商授权或背书。Claude 已移除主动订阅轮询，也不提取订阅令牌或代理模型请求；使用原工具仍应遵守服务商条款。[使用边界](docs/claude-connection.md)
+
+</details>
+
+<details>
+<summary><strong>支持 Windows、Intel Mac 或 API Key 模式吗？</strong></summary>
+
+当前 macOS 通用包支持 Apple Silicon 和 Intel；原工具的系统与芯片要求另行适用。Windows 只有工程脚手架，Linux 暂无发行版。API Key 模式可统计支持的本机日志，但不提供订阅剩余百分比。
+
+</details>
+
+## 需要帮助
+
+- **刚装好不会用：** [图文快速上手](docs/quick-start.md)
+- **数据对不上：** [统计口径](docs/data-sources.md) · [Claude 连接](docs/claude-connection.md)
+- **发现问题或希望新增功能：** [提交 Issue](https://github.com/liuzilong200049-bot/QuotaMate/issues/new/choose)，请附脱敏截图与复现步骤。
+- **发现安全漏洞：** [私密报告](https://github.com/liuzilong200049-bot/QuotaMate/security/advisories/new)，不要公开上传凭证、数据库或原始日志。
+
+## 参与开发
+
+<details>
+<summary><strong>从源码运行、测试和打包</strong></summary>
+
+基准环境为 Flutter **3.47.7** / Dart **3.13.5**、macOS、Xcode。Python 3 仅用于开发检查和打包，不是安装包的运行依赖。
 
 ```sh
 git clone https://github.com/liuzilong200049-bot/QuotaMate.git
@@ -60,10 +192,6 @@ cd QuotaMate
 flutter pub get --enforce-lockfile
 flutter run -d macos
 ```
-
-应用不会捆绑 Codex 或 Claude Code。开发运行时若尚未构建原生状态栏转发器，该采集功能会提示组件不可用；完整打包脚本会构建并放入转发器。普通统计与界面开发不需要它。
-
-## 验证与打包
 
 ```sh
 dart format --output=none --set-exit-if-changed lib test tool
@@ -74,18 +202,16 @@ python3 scripts/check_public_files.py
 bash scripts/package_macos.sh
 ```
 
-公开文件检查读取 Git 索引；首次提交前应先暂存计划公开的文件。原生采集器测试、截图生成和贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。CI 使用模拟数据，不调用真实账号诊断或消耗额度。
+公开文件检查读取 Git 索引；先暂存计划公开的文件再执行。原生采集器测试和贡献规范见 [CONTRIBUTING.md](CONTRIBUTING.md)。CI 使用模拟数据，不运行真实账号诊断。
 
-打包产物位于 `dist/`，包含 DMG、ZIP 和 SHA256。新包校验通过后，脚本将本机旧版本安装包移至废纸篓，只保留最新版本；失败时保留旧包。安装包通过 Releases 分发，不提交到源码仓库。
+`dist/` 包含 DMG、ZIP 与 SHA256。新包校验通过后，脚本把本机旧安装包移至废纸篓，只保留最新版本；失败时保留旧包。开发运行尚未构建原生转发器时，状态栏采集会提示组件不可用；完整打包脚本会构建它。
 
-## 隐私与问题报告
+</details>
 
-本机数据库位于 `~/Library/Application Support/QuotaMate/usage.sqlite3`，包含账号显示信息和项目路径，请勿公开。应用不保存对话正文、模型回答、工具参数或 OAuth 凭证，也没有自己的云端服务或遥测端点；官方 CLI 的服务商网络访问按其自身行为执行。
+## 开源与致谢
 
-提交 Issue 前检查截图和文本，移除邮箱、真实路径和凭证。漏洞通过 [私密安全报告](https://github.com/liuzilong200049-bot/QuotaMate/security/advisories/new) 提交，不要公开上传数据库或原始日志。更多说明见 [SECURITY.md](SECURITY.md)。
+项目自有代码与资源采用 [MIT](LICENSE)，依赖保留各自许可。[第三方声明](THIRD_PARTY_NOTICES.md) · [版本记录](CHANGELOG.md) · [品牌资源](docs/branding.md)
 
-## 贡献与许可
+视觉风格参考 [FlClash](https://github.com/chen08209/FlClash)，日志计时参考 [CC Switch](https://github.com/farion1231/cc-switch) 并保留 MIT 声明；未引入 FlClash 的界面源码或代理内核。QuotaMate 与 OpenAI、Anthropic、FlClash 无官方隶属或背书关系。
 
-欢迎贡献解析兼容性、文档、界面和 Windows 支持。请先阅读 [贡献指南](CONTRIBUTING.md)、[版本记录](CHANGELOG.md) 和 [第三方声明](THIRD_PARTY_NOTICES.md)。
-
-项目自有代码与资源采用 [MIT](LICENSE)，依赖继续遵守各自许可。视觉风格参考 [FlClash](https://github.com/chen08209/FlClash)，日志计时参考 [CC Switch](https://github.com/farion1231/cc-switch) 并保留 MIT 声明；未引入 FlClash 的界面源码或代理内核。图标及背景来源见 [品牌资源](docs/branding.md)。
+<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.22-alpha/QuotaMate-0.1.22-macos-universal.dmg"><strong>下载 QuotaMate for macOS →</strong></a></p>

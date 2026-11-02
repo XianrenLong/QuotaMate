@@ -50,6 +50,14 @@ class PublicFilesTest(unittest.TestCase):
         self.assertTrue(any("personal absolute path" in v for v in errors))
         self.assertNotIn(private_path, "\n".join(errors))
 
+    def test_readme_html_images_and_picture_sources_are_checked(self):
+        self.stage("README.md", '<picture><source srcset="missing.png 1x, other.png 2x"><img src="image.png"></picture><a href="https://example.com">Download</a>')
+        self.stage("image.png", "synthetic image")
+        _, errors = audit(self.root)
+        self.assertEqual(len(errors), 2)
+        self.assertTrue(any("missing.png" in value for value in errors))
+        self.assertTrue(any("other.png" in value for value in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

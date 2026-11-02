@@ -13,6 +13,7 @@ import 'package:quota_mate/l10n/strings.dart';
 import 'package:quota_mate/data/appearance.dart';
 import 'package:quota_mate/data/provider.dart';
 import 'package:quota_mate/data/models.dart';
+import 'package:quota_mate/data/demo.dart';
 import 'package:quota_mate/data/store.dart';
 import 'package:quota_mate/ui/app.dart';
 import 'package:quota_mate/ui/overview_account.dart';
@@ -81,6 +82,7 @@ void main() {
       for (final target in [
         (AppLanguage.zh, 1320.0, 0, AppAppearance.dark, AiProvider.gpt),
         (AppLanguage.zh, 1320.0, 1, AppAppearance.dark, AiProvider.gpt),
+        (AppLanguage.zh, 1320.0, 1, AppAppearance.light, AiProvider.gpt),
         (AppLanguage.en, 1320.0, 0, AppAppearance.light, AiProvider.gpt),
         (AppLanguage.zh, 1320.0, 0, AppAppearance.dark, AiProvider.claude),
         (AppLanguage.zh, 1320.0, 1, AppAppearance.dark, AiProvider.claude),
@@ -115,20 +117,36 @@ void main() {
               : null,
         );
         c.accountVerified = true;
-        final tokens = c.isClaude
-            ? const Tokens(100000, 80000, 2000, 0, 15000, 10000)
-            : const Tokens(100000, 98000, 200);
-        c.all = [
-          UsageEvent(
-            id: 'sample',
-            session: 'sample',
-            project: '/sample/Example project',
-            model: c.isClaude ? 'claude-opus-5' : 'gpt-6.1-sol',
-            at: c.now,
+        // Rich, synthetic seven-day data makes the documentation useful without
+        // reading real accounts. Claude's unsupported timing fields stay unknown.
+        c.days = 7;
+        c.all = demoEvents(c.now, claude: c.isClaude).map((event) {
+          final tokens = c.isClaude
+              ? Tokens(
+                  event.tokens.input,
+                  event.tokens.cached,
+                  event.tokens.output,
+                  0,
+                  event.freshInput ~/ 3,
+                )
+              : event.tokens;
+          final model = c.isClaude ? 'claude-sonnet-4-6' : 'gpt-6.1-sol';
+          final price = c.prices.where((v) => v.model == model).firstOrNull;
+          return UsageEvent(
+            id: event.id,
+            session: event.session,
+            project: event.project,
+            model: model,
+            at: event.at,
             tokens: tokens,
-            cost: c.isClaude ? .24625 : .028,
-          ),
-        ];
+            cost: price?.estimate(tokens),
+            outputTokensPerSecond: c.isClaude
+                ? null
+                : event.outputTokensPerSecond,
+            firstTokenSeconds: c.isClaude ? null : event.firstTokenSeconds,
+            timingEstimated: !c.isClaude,
+          );
+        }).toList();
         c.language = target.$1;
         c.appearance = target.$4;
         c.navigate(target.$3);

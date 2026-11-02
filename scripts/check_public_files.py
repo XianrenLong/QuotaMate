@@ -2,6 +2,7 @@
 """Check the Git index before publishing; report paths, never secret values."""
 
 from pathlib import Path, PurePosixPath
+from html import unescape
 import re
 import subprocess
 import sys
@@ -23,6 +24,7 @@ PRIVATE_SUFFIXES = {
 }
 LOCAL_PREFIXES = ("design/", "build/", "dist/", "exports/", "diagnostics/", "local-data/")
 LINK = re.compile(r"!?\[[^\]\n]*\]\(([^)\n]+)\)")
+HTML_LINK = re.compile(r'''\b(href|src|srcset)\s*=\s*["']([^"']+)["']''', re.I)
 
 
 def indexed_files(root: Path) -> dict[str, tuple[str, str]]:
@@ -79,8 +81,16 @@ def audit(root: Path) -> tuple[int, list[str]]:
                 errors.append(f"{name}: possible {label}; value redacted")
         if path.suffix.lower() != ".md":
             continue
-        for raw_target in LINK.findall(data.decode("utf-8")):
+        markdown = data.decode("utf-8")
+        targets = LINK.findall(markdown)
+        for kind, value in HTML_LINK.findall(markdown):
+            if kind.lower() == "srcset":
+                targets.extend(part.strip().split()[0] for part in value.split(",") if part.strip())
+            else:
+                targets.append(value)
+        for raw_target in targets:
             target = raw_target.split(' "', 1)[0].strip("<>")
+            target = unescape(target)
             parsed = urlsplit(target)
             if parsed.scheme or parsed.netloc or not parsed.path:
                 continue
