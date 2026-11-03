@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 
 import 'app_info.dart';
 import 'data/codex_rpc.dart';
+import 'data/desktop_platform.dart';
 import 'data/demo.dart';
 import 'data/models.dart';
 import 'data/native_bridge.dart';
@@ -62,11 +63,7 @@ class AppController extends ChangeNotifier {
     bool forceDemo = false,
     QuotaResetter? quotaResetter,
   }) : _quotaResetter = quotaResetter ?? CodexRpc.resetQuota {
-    final home =
-        Platform.environment['HOME'] ??
-        Platform.environment['USERPROFILE'] ??
-        '';
-    final root = Platform.environment['CODEX_HOME'] ?? p.join(home, '.codex');
+    final root = DesktopPlatform().codexRoot;
     final s = store.get('preferences') as Map? ?? {};
     language = s['language'] == 'en' ? AppLanguage.en : AppLanguage.zh;
     appearance = AppAppearance.values.firstWhere(
@@ -563,6 +560,10 @@ class AppController extends ChangeNotifier {
         );
         final launched = await NativeBridge.call<bool>('launchClaudeLogin', {
           'path': command.path,
+          if (Platform.isWindows)
+            'encoded': DesktopPlatform.encodedPowerShell(
+              await command.readAsString(),
+            ),
         });
         if (launched != true) {
           throw StateError('Official sign-in terminal unavailable');

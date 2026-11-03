@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 
 import 'controller.dart';
 import 'data/store.dart';
+import 'data/desktop_platform.dart';
 import 'ui/app.dart';
 
 Future<void> main() async {
@@ -22,15 +23,7 @@ Future<void> main() async {
       ], await rootBundle.loadString(entry.value));
     }
   });
-  final home =
-      Platform.environment['HOME'] ??
-      Platform.environment['USERPROFILE'] ??
-      Directory.current.path;
-  final directory = Directory(
-    Platform.isMacOS
-        ? p.join(home, 'Library', 'Application Support', 'QuotaMate')
-        : p.join(Platform.environment['APPDATA'] ?? home, 'QuotaMate'),
-  );
+  final directory = Directory(DesktopPlatform().supportDirectory);
   await directory.create(recursive: true);
   if (!Platform.isWindows) await Process.run('chmod', ['700', directory.path]);
   final store = LocalStore(p.join(directory.path, 'usage.sqlite3'));

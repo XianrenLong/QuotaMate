@@ -47,3 +47,53 @@ jobs:
           python3 scripts/test_claude_statusline.py "$RUNNER_TEMP/quotamate-claude-statusline"
       - name: Build macOS application
         run: flutter build macos --release
+
+  windows:
+    name: Windows x64 checks and packages
+    runs-on: windows-2025
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Check public files
+        run: python scripts/check_public_files.py
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Prepare SQLite and native fixtures
+        run: |
+          python scripts/prepare_windows.py
+          "$pwd/build/windows-dependencies" >> $env:GITHUB_PATH
+          dart compile exe tool/windows_cli_fixture.dart -o build/windows-dependencies/official-cli-fixture.exe
+          "QUOTAMATE_TEST_CLI=$pwd/build/windows-dependencies/official-cli-fixture.exe" >> $env:GITHUB_ENV
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool scripts/claude_statusline.dart
+      - name: Analyze
+        run: dart analyze
+      - name: Test application
+        run: flutter test
+      - name: Build and test Windows metadata relay
+        run: |
+          dart compile exe scripts/claude_statusline.dart -o build/windows-dependencies/quotamate-claude-statusline.exe
+          python scripts/test_claude_statusline.py build/windows-dependencies/quotamate-claude-statusline.exe
+      - name: Build Windows application and packages
+        run: ./scripts/package_windows.ps1
+      - name: Smoke test packaged application
+        run: ./scripts/test_windows_package.ps1
+      - name: Upload Windows test packages
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: QuotaMate-windows-x64
+          path: dist/windows/*
+          if-no-files-found: error
+          retention-days: 7

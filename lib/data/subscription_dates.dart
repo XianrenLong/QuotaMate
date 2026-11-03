@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import 'models.dart';
+import 'desktop_platform.dart';
 
 /// Local metadata only. Never sends, logs or persists a token, nor refreshes it.
 abstract final class SubscriptionDateReader {
@@ -155,7 +156,7 @@ abstract final class SubscriptionDateReader {
     Map<String, String>? environment,
   }) async {
     final env = environment ?? Platform.environment;
-    final base = home ?? env['HOME'] ?? env['USERPROFILE'] ?? '';
+    final base = home ?? DesktopPlatform(environment: env).home;
     final standard =
         p.normalize(root) == p.normalize(p.join(base, '.claude')) &&
         !env.containsKey('CLAUDE_CONFIG_DIR');

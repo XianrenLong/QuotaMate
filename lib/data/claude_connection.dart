@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 
 import 'models.dart';
+import 'desktop_platform.dart';
 import 'subscription_dates.dart';
 
 class ClaudeAccountChanged implements Exception {}
@@ -40,16 +41,8 @@ class ClaudeConnection {
           subscriptionDates: value.subscriptionDates,
         )
       : value;
-  static String get defaultRoot =>
-      Platform.environment['CLAUDE_CONFIG_DIR'] ??
-      p.join(
-        Platform.environment['HOME'] ??
-            Platform.environment['USERPROFILE'] ??
-            '',
-        '.claude',
-      );
-  static String get home =>
-      Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';
+  static String get defaultRoot => DesktopPlatform().claudeRoot;
+  static String get home => DesktopPlatform().home;
   static Map<String, String> environment(String root) =>
       p.normalize(root) == p.normalize(p.join(home, '.claude')) &&
           !Platform.environment.containsKey('CLAUDE_CONFIG_DIR')
@@ -57,16 +50,7 @@ class ClaudeConnection {
       : {'CLAUDE_CONFIG_DIR': root};
 
   static Future<String?> locate([String? configured]) async {
-    final candidates = [
-      if (configured?.isNotEmpty == true) configured!,
-      for (final part in (Platform.environment['PATH'] ?? '').split(
-        Platform.isWindows ? ';' : ':',
-      ))
-        p.join(part, Platform.isWindows ? 'claude.exe' : 'claude'),
-      p.join(home, '.local', 'bin', 'claude'),
-      '/opt/homebrew/bin/claude',
-      '/usr/local/bin/claude',
-    ];
+    final candidates = DesktopPlatform().cliCandidates('claude', configured);
     for (final candidate in candidates) {
       if (await File(candidate).exists()) return candidate;
     }
@@ -143,16 +127,29 @@ class ClaudeConnection {
     final file = File(
       p.join(
         directory.path,
-        'login-${DateTime.now().microsecondsSinceEpoch}.command',
+        'login-${DateTime.now().microsecondsSinceEpoch}.${Platform.isWindows ? 'ps1' : 'command'}',
       ),
     );
-    final env = environment(root).entries
-        .map((entry) => 'export ${entry.key}=${shellQuote(entry.value)}')
-        .join('\n');
-    await file.writeAsString(
-      '#!/bin/sh\n$env\nexec ${shellQuote(executable)} auth login\n',
-      flush: true,
-    );
+    if (Platform.isWindows) {
+      final env = environment(root).entries
+          .map(
+            (entry) =>
+                '\$env:${entry.key}=${DesktopPlatform.powershellQuote(entry.value)}',
+          )
+          .join('\r\n');
+      await file.writeAsString(
+        '\ufeff$env\r\n& ${DesktopPlatform.powershellQuote(executable)} auth login\r\n',
+        flush: true,
+      );
+    } else {
+      final env = environment(root).entries
+          .map((entry) => 'export ${entry.key}=${shellQuote(entry.value)}')
+          .join('\n');
+      await file.writeAsString(
+        '#!/bin/sh\n$env\nexec ${shellQuote(executable)} auth login\n',
+        flush: true,
+      );
+    }
     if (!Platform.isWindows) await Process.run('chmod', ['700', file.path]);
     return file;
   }
@@ -334,16 +331,7 @@ class ClaudeConnection {
         );
         final cachedDesktop = p.normalize(root) == p.normalize(defaultRoot)
             ? desktop(
-                await readJson(
-                  historyPath ??
-                      p.join(
-                        home,
-                        'Library',
-                        'Application Support',
-                        'Claude',
-                        'plan-usage-history.json',
-                      ),
-                ),
+                await readJson(historyPath ?? DesktopPlatform().claudeHistory),
                 auth,
                 now,
               )
@@ -427,7 +415,10 @@ class ClaudeConnection {
         (await Process.run('chmod', ['700', private.path])).exitCode != 0) {
       throw StateError('Claude configuration permissions unavailable');
     }
-    final installed = p.join(private.path, 'quotamate-claude-statusline');
+    final installed = p.join(
+      private.path,
+      'quotamate-claude-statusline${Platform.isWindows ? '.exe' : ''}',
+    );
     final staged = '$installed.${DateTime.now().microsecondsSinceEpoch}.tmp';
     try {
       await File(helper).copy(staged);
@@ -439,9 +430,10 @@ class ClaudeConnection {
     final previous = settings['statusLine'];
     final isOurs =
         previous is Map &&
-        (previous['command'] as String? ?? '').contains(
-          'quotamate-claude-statusline',
-        );
+        (previous['quotamateRelay'] == true ||
+            (previous['command'] as String? ?? '').contains(
+              'quotamate-claude-statusline',
+            ));
     if (!isOurs) {
       await _atomic(File(p.join(private.path, 'original-statusline.json')), {
         'present': settings.containsKey('statusLine'),
@@ -451,8 +443,13 @@ class ClaudeConnection {
     settings['statusLine'] = {
       if (previous is Map) ...Map<String, dynamic>.from(previous),
       'type': 'command',
-      'command':
-          '${shellQuote(installed)} --root ${shellQuote(root)} --identity ${shellQuote(identityHash(auth))}',
+      'command': Platform.isWindows
+          ? DesktopPlatform.collectorCommand(
+              installed,
+              root,
+              identityHash(auth),
+            )
+          : '${shellQuote(installed)} --root ${shellQuote(root)} --identity ${shellQuote(identityHash(auth))}',
     };
     final target = await settingsFile.exists()
         ? File(await settingsFile.resolveSymbolicLinks())
@@ -465,9 +462,10 @@ class ClaudeConnection {
     final settings = await readJson(file.path);
     final current = settings['statusLine'];
     if (current is! Map ||
-        !(current['command'] as String? ?? '').contains(
-          'quotamate-claude-statusline',
-        )) {
+        !(current['quotamateRelay'] == true ||
+            (current['command'] as String? ?? '').contains(
+              'quotamate-claude-statusline',
+            ))) {
       return false;
     }
     final private = Directory(p.join(root, 'quotamate'));

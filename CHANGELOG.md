@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.25 · Windows Alpha
+
+- 新增 Windows x64 原生窗口、文件夹 / 可执行文件选择、CSV 导出、托盘和系统通知。
+- 复用现有统计、中英文、外观及 GPT / Claude 默认模型单价；支持 Windows 用户数据路径及原生客户端查找。
+- Claude 登录委托官方工具，在 PowerShell 中完成；新增 Windows 独立被动状态栏采集器，保留原状态栏及身份隔离。
+- 新增 Windows CI、固定版本校验的 SQLite DLL、应用本地 VC++ 运行库、便携 ZIP 与当前用户安装程序。新包生成后自动回收本机旧版 Windows 安装包。
+- Windows 原生客户端为首批适配目标；不自动跨入 WSL 运行工具或读取 WSL 的 Linux 登录环境。
+
+
 ## 0.1.24 Alpha — 2026-11-02
 
 - Claude 默认参考价补齐为 20 个型号，新用户首次启动自动带入。

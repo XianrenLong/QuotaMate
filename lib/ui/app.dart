@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -70,17 +72,41 @@ class _AppShellState extends State<AppShell> {
       animation: c,
       builder: (context, _) => CallbackShortcuts(
         bindings: {
-          SingleActivator(LogicalKeyboardKey.digit1, meta: true): () =>
+          SingleActivator(
+            LogicalKeyboardKey.digit1,
+            meta: Platform.isMacOS,
+            control: !Platform.isMacOS,
+          ): () =>
               c.navigate(0),
-          SingleActivator(LogicalKeyboardKey.digit2, meta: true): () =>
+          SingleActivator(
+            LogicalKeyboardKey.digit2,
+            meta: Platform.isMacOS,
+            control: !Platform.isMacOS,
+          ): () =>
               c.navigate(1),
-          SingleActivator(LogicalKeyboardKey.digit3, meta: true): () =>
+          SingleActivator(
+            LogicalKeyboardKey.digit3,
+            meta: Platform.isMacOS,
+            control: !Platform.isMacOS,
+          ): () =>
               c.navigate(2),
-          SingleActivator(LogicalKeyboardKey.comma, meta: true): () =>
+          SingleActivator(
+            LogicalKeyboardKey.comma,
+            meta: Platform.isMacOS,
+            control: !Platform.isMacOS,
+          ): () =>
               c.navigate(4),
-          SingleActivator(LogicalKeyboardKey.keyR, meta: true): () =>
+          SingleActivator(
+            LogicalKeyboardKey.keyR,
+            meta: Platform.isMacOS,
+            control: !Platform.isMacOS,
+          ): () =>
               c.refresh(),
-          SingleActivator(LogicalKeyboardKey.keyE, meta: true): () =>
+          SingleActivator(
+            LogicalKeyboardKey.keyE,
+            meta: Platform.isMacOS,
+            control: !Platform.isMacOS,
+          ): () =>
               c.export(),
         },
         child: Focus(
@@ -88,21 +114,22 @@ class _AppShellState extends State<AppShell> {
           child: Scaffold(
             body: Column(
               children: [
-                GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onPanStart: (_) => NativeBridge.call('dragWindow'),
-                  child: SizedBox(
-                    height: 32,
-                    child: Center(
-                      child: label(
-                        AppInfo.name,
-                        size: 11,
-                        color: themeColor(context, C.muted),
-                        localize: false,
+                if (Platform.isMacOS)
+                  GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onPanStart: (_) => NativeBridge.call('dragWindow'),
+                    child: SizedBox(
+                      height: 32,
+                      child: Center(
+                        child: label(
+                          AppInfo.name,
+                          size: 11,
+                          color: themeColor(context, C.muted),
+                          localize: false,
+                        ),
                       ),
                     ),
                   ),
-                ),
                 Expanded(
                   child: Row(
                     children: [

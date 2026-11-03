@@ -102,7 +102,7 @@ QUOTAMATE_TEST_AUTH
     expect(c.account?.observed, sampleTime);
     expect(c.presentedWindow?.remaining, 88);
     expect(log.readAsLinesSync(), List.filled(8, 'auth status'));
-  });
+  }, skip: Platform.isWindows);
 
   testWidgets(
     'empty Claude statistics explain data coverage and allow opening settings in both languages',

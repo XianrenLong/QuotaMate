@@ -26,6 +26,7 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
+  native_bridge_ = std::make_unique<NativeBridge>(GetHandle(), flutter_controller_->engine()->messenger());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
@@ -40,6 +41,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  native_bridge_.reset();
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -51,6 +53,14 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  if (native_bridge_ && native_bridge_->HandleMessage(message, wparam, lparam)) return 0;
+  if (message == WM_GETMINMAXINFO) {
+    auto* limits = reinterpret_cast<MINMAXINFO*>(lparam);
+    const UINT dpi = GetDpiForWindow(hwnd);
+    limits->ptMinTrackSize.x = MulDiv(1000, dpi, 96);
+    limits->ptMinTrackSize.y = MulDiv(660, dpi, 96);
+    return 0;
+  }
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =

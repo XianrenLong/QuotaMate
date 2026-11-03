@@ -309,10 +309,22 @@ void main() {
       );
       final text = command.readAsStringSync();
       expect(text, contains(' auth login'));
-      expect(text, contains('export CLAUDE_CONFIG_DIR='));
+      expect(
+        text,
+        contains(
+          Platform.isWindows
+              ? r'$env:CLAUDE_CONFIG_DIR='
+              : 'export CLAUDE_CONFIG_DIR=',
+        ),
+      );
       expect(text, isNot(contains('access_token')));
-      expect((await Process.run('/bin/sh', ['-n', command.path])).exitCode, 0);
-      expect(command.statSync().mode & 0x1ff, 0x1c0);
+      if (!Platform.isWindows) {
+        expect(
+          (await Process.run('/bin/sh', ['-n', command.path])).exitCode,
+          0,
+        );
+        expect(command.statSync().mode & 0x1ff, 0x1c0);
+      }
     },
   );
   test('shell quoting does not interpret spaces, apostrophes or shell metacharacters', () async {
@@ -322,7 +334,7 @@ void main() {
       'printf %s ${ClaudeConnection.shellQuote(value)}',
     ]);
     expect(output.stdout, value);
-  });
+  }, skip: Platform.isWindows);
   test(
     'API keys and third-party auth never borrow subscription snapshots',
     () async {

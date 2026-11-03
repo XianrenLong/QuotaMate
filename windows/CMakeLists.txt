@@ -106,3 +106,10 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# The official pinned DLL is prepared before configuring a Windows build.
+set(QUOTAMATE_SQLITE "${CMAKE_CURRENT_SOURCE_DIR}/../build/windows-dependencies/sqlite3.dll")
+if(NOT EXISTS "${QUOTAMATE_SQLITE}")
+  message(FATAL_ERROR "Run python scripts/prepare_windows.py before building Windows")
+endif()
+install(FILES "${QUOTAMATE_SQLITE}" DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT Runtime)

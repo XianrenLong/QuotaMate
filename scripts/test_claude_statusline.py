@@ -34,7 +34,8 @@ class StatusLineRelayTest(unittest.TestCase):
         self.assertEqual(data['rate_limits']['five_hour']['used_percentage'], 25)
         self.assertNotIn('PRIVATE', snapshot.read_text())
         self.assertNotIn('SECRET', snapshot.read_text())
-        self.assertEqual(snapshot.stat().st_mode & 0o777, 0o600)
+        if os.name != 'nt':
+            self.assertEqual(snapshot.stat().st_mode & 0o777, 0o600)
         self.assertIn('5h 25%', result.stdout)
 
     def test_old_session_cannot_overwrite_a_new_identity_binding(self):
@@ -49,7 +50,7 @@ class StatusLineRelayTest(unittest.TestCase):
     def test_preserves_existing_status_line_output_even_when_it_ignores_input(self):
         private = self.root / 'quotamate'
         private.mkdir(mode=0o700)
-        (private / 'original-statusline.json').write_text(json.dumps({'statusLine': {'command': 'printf original-output'}}))
+        (private / 'original-statusline.json').write_text(json.dumps({'statusLine': {'command': "[Console]::Write('original-output')" if os.name == 'nt' else 'printf original-output'}}))
         result = self.run_relay(data={**self.input, 'ignored': 'x' * 50000})
         self.assertEqual(result.stdout, 'original-output')
 

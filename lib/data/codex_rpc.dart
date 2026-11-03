@@ -2,27 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:path/path.dart' as p;
-
 import '../app_info.dart';
 import 'models.dart';
+import 'desktop_platform.dart';
 import 'quota_reset.dart';
 import 'subscription_dates.dart';
 
 class CodexRpc {
   static Future<String?> locate([String? configured]) async {
-    final candidates = <String>[
-      if (configured != null && configured.isNotEmpty) configured,
-      for (final part in (Platform.environment['PATH'] ?? '').split(
-        Platform.isWindows ? ';' : ':',
-      ))
-        p.join(part, Platform.isWindows ? 'codex.exe' : 'codex'),
-      '/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex',
-      '/Applications/Codex.app/Contents/Resources/codex',
-      '/opt/homebrew/bin/codex',
-      '/usr/local/bin/codex',
-      p.join(Platform.environment['HOME'] ?? '', '.local', 'bin', 'codex'),
-    ];
+    final candidates = DesktopPlatform().cliCandidates('codex', configured);
     for (final path in candidates) {
       if (await File(path).exists()) return path;
     }
