@@ -7,7 +7,7 @@ try {
     python scripts/prepare_windows.py
     if ($LASTEXITCODE -ne 0) { throw 'SQLite preparation failed' }
     if (-not $SkipBuild) {
-        flutter build windows --release --target-platform windows-x64
+        flutter build windows --release
         if ($LASTEXITCODE -ne 0) { throw 'Windows build failed' }
     }
     $release = Join-Path $projectDirectory 'build/windows/x64/runner/Release'
