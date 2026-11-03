@@ -25,10 +25,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       GetCommandLineArguments();
 
   const bool background = std::find(command_line_arguments.begin(), command_line_arguments.end(), "--background") != command_line_arguments.end();
-  HANDLE instance = CreateMutexW(nullptr, TRUE, L"Local\\QuotaMateDesktop");
+  HANDLE application_mutex = CreateMutexW(nullptr, TRUE, L"Local\\QuotaMateDesktop");
   const DWORD instance_status = GetLastError();
-  std::unique_ptr<void, decltype(&CloseHandle)> instance_guard(instance, &CloseHandle);
-  if (instance && instance_status == ERROR_ALREADY_EXISTS) {
+  std::unique_ptr<void, decltype(&CloseHandle)> instance_guard(application_mutex, &CloseHandle);
+  if (application_mutex && instance_status == ERROR_ALREADY_EXISTS) {
     if (!background) {
       for (int attempt = 0; attempt < 50; ++attempt) {
         const HWND existing = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"QuotaMate");

@@ -51,6 +51,7 @@ class ConnectionDiagnostics {
     SourceProfile profile, {
     String? configured,
     Future<String?> Function()? locate,
+    void Function(List<ConnectionCheck>)? onProgress,
     Future<AccountSnapshot> Function(String, String)? identity,
     Future<AccountSnapshot> Function(String, String)? quota,
     Future<ClaudeConnectionResult> Function(String, String)? claude,
@@ -62,7 +63,11 @@ class ConnectionDiagnostics {
       String detail,
       CheckState state, [
       CheckAction? action,
-    ]) => checks.add(ConnectionCheck(id, title, detail, state, action));
+    ]) {
+      checks.add(ConnectionCheck(id, title, detail, state, action));
+      onProgress?.call(List.unmodifiable(checks));
+    }
+
     final isClaude = profile.provider == AiProvider.claude;
     String? executable, email;
     try {
