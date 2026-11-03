@@ -320,11 +320,12 @@ class _AppShellState extends State<AppShell> {
                                             ),
                                           ),
                                         );
-                                  if (compact)
+                                  if (compact) {
                                     return Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [storage, ?download],
                                     );
+                                  }
                                   return Row(
                                     children: [
                                       Expanded(child: storage),

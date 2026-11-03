@@ -18,6 +18,32 @@ import 'package:quota_mate/data/store.dart';
 import 'package:quota_mate/ui/app.dart';
 import 'package:quota_mate/ui/overview_account.dart';
 
+class _PreviewController extends AppController {
+  _PreviewController(super.store);
+  @override
+  List<AccountSnapshot> get quotaSamples {
+    if (!isClaude || account == null) return super.quotaSamples;
+    return [
+      for (var i = 0; i <= 12; i++)
+        AccountSnapshot(
+          authMode: 'claude',
+          observed: now.subtract(Duration(minutes: 119 * i)),
+          source: '演示数据',
+          primary: QuotaWindow(
+            (32 - i * 2).toDouble(),
+            300,
+            now.add(const Duration(hours: 2)),
+          ),
+          secondary: QuotaWindow(
+            (16 - i).toDouble(),
+            10080,
+            now.add(const Duration(days: 3)),
+          ),
+        ),
+    ];
+  }
+}
+
 void main() {
   testWidgets(
     'capture production account card with sample identity, no network calls',
@@ -48,7 +74,7 @@ void main() {
           {'root': '/sample/claude', 'label': '示例账号', 'provider': 'claude'},
         ],
       });
-      final c = AppController(store);
+      final c = _PreviewController(store);
       c.now = DateTime(2026, 11, 1, 12);
       c.account = AccountSnapshot(
         email: 'alex@example.com',
@@ -89,10 +115,18 @@ void main() {
         (AppLanguage.zh, 1320.0, 4, AppAppearance.dark, AiProvider.claude),
         (AppLanguage.en, 1320.0, 4, AppAppearance.dark, AiProvider.claude),
         (AppLanguage.en, 1320.0, 0, AppAppearance.dark, AiProvider.claude),
+        (AppLanguage.zh, 1320.0, 0, AppAppearance.light, AiProvider.claude),
         (AppLanguage.en, 1000.0, 1, AppAppearance.dark, AiProvider.claude),
         (AppLanguage.zh, 1320.0, 1, AppAppearance.light, AiProvider.claude),
       ]) {
         final width = target.$2;
+        c.now = DateTime(
+          2026,
+          11,
+          1,
+          target.$3 == 0 && target.$5 == AiProvider.claude ? 23 : 12,
+          target.$3 == 0 && target.$5 == AiProvider.claude ? 55 : 0,
+        );
         c.provider = target.$5;
         c.selected = 0;
         c.claudeSignedIn = c.isClaude;
@@ -157,6 +191,7 @@ void main() {
         }).toList();
         c.language = target.$1;
         c.appearance = target.$4;
+        if (c.isClaude && target.$3 == 0) c.days = 1;
         c.navigate(target.$3);
         tester.view.physicalSize = Size(width, 850);
         tester.view.devicePixelRatio = 1;

@@ -846,8 +846,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
         children: [
           _claudeTabs(c),
           const SizedBox(height: 8),
-          SizedBox(height: 51, child: PeriodStrip(c, statistics: true)),
-          const SizedBox(height: 12),
           Expanded(child: ClaudeLimits(c)),
         ],
       );
@@ -988,7 +986,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   Widget _claudeTabs(AppController c) => Row(
     children: [
-      Segments(
+      QuotaSegments(
         ['Token 与成本', '账户额度'],
         c.claudeQuotaTab ? 1 : 0,
         (i) => c.selectClaudeStatistics(i == 1),

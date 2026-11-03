@@ -1,12 +1,12 @@
 # Windows 使用与构建指南
 
-[返回首页](../README.md) · [Windows 安装程序](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/QuotaMate-0.1.28-windows-x64-setup.exe) · [便携 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/QuotaMate-0.1.28-windows-x64.zip)
+[返回首页](../README.md) · [Windows 安装程序](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.29-alpha/QuotaMate-0.1.29-windows-x64-setup.exe) · [便携 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.29-alpha/QuotaMate-0.1.29-windows-x64.zip)
 
 ## 安装与首次使用
 
 首版为 **Windows x64 Alpha**。推荐 Windows 11；最低目标为 Windows 10 1809，原客户端的系统要求另行适用。目前不提供原生 ARM64 或 32 位安装包。
 
-1. 下载 `QuotaMate-0.1.28-windows-x64-setup.exe` 并运行。安装到当前用户目录，不请求管理员权限。
+1. 下载 `QuotaMate-0.1.29-windows-x64-setup.exe` 并运行。安装到当前用户目录，不请求管理员权限。
 2. 从开始菜单打开 **QuotaMate**。首次启动默认进入统计，显示今日数据；语言、主题和模型参考价格都已内置。
 3. 在右上角选择 **GPT** 或 **Claude**，按下面步骤核对本机连接。
 4. 用原客户端正常工作后回到 QuotaMate 刷新。仅登录账号不会生成 Token 历史。
@@ -102,7 +102,7 @@ CI 不读取真实账号，使用合成 CLI 与隔离数据目录。安装包启
 ## 校验与排错
 
 ```powershell
-Get-FileHash .\QuotaMate-0.1.28-windows-x64-setup.exe -Algorithm SHA256
+Get-FileHash .\QuotaMate-0.1.29-windows-x64-setup.exe -Algorithm SHA256
 ```
 
 与同一个 Release 中的 `SHA256SUMS-windows` 比较。缺数据先检查时间范围、数据目录和 Windows / WSL 环境；缺额度先检查官方工具的当前登录和状态栏快照。
