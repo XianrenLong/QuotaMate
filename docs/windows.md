@@ -69,6 +69,16 @@ $env:PATH = "$pwd\build\windows-dependencies;$env:PATH"
 flutter run -d windows
 ```
 
+运行完整 Windows 测试前，先编译不访问真实账号的 CLI 夹具和采集器：
+
+```powershell
+dart compile exe tool/windows_cli_fixture.dart -o build/windows-dependencies/official-cli-fixture.exe
+dart compile exe scripts/claude_statusline.dart -o build/windows-dependencies/quotamate-claude-statusline.exe
+$env:QUOTAMATE_TEST_CLI = (Resolve-Path build/windows-dependencies/official-cli-fixture.exe).Path
+$env:QUOTAMATE_TEST_RELAY = (Resolve-Path build/windows-dependencies/quotamate-claude-statusline.exe).Path
+flutter test
+```
+
 生成完整安装程序与便携 ZIP：
 
 ```powershell

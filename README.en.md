@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/macOS-12%2B-334155?style=flat-square" alt="macOS 12+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
 </p>
-<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="Download the universal macOS DMG"></a></p>
+<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="Download the universal macOS DMG"></a> <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-windows-x64-setup.exe"><img src="docs/assets/download-windows.svg" width="320" alt="Download the Windows x64 installer"></a></p>
 <p align="center"><a href="#download">Download</a> · <a href="#first-run">First run</a> · <a href="#connect-gpt">GPT / Codex</a> · <a href="#connect-claude">Claude</a> · <a href="#faq">FAQ</a> · <a href="README.md">简体中文</a></p>
 
 ![Claude statistics with synthetic seven-day data](screenshots/preview/statistics-claude-dark-en.png)
