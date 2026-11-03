@@ -2,7 +2,7 @@
 
 **Windows 用户请先看 [Windows 使用指南](windows.md)。以下安装步骤适用于 macOS。**
 
-[返回项目首页](../README.md) · [直接下载 macOS DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.26-alpha/QuotaMate-0.1.26-macos-universal.dmg) · [版本说明](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.26-alpha)
+[返回项目首页](../README.md) · [直接下载 macOS DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-macos-universal.dmg) · [版本说明](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.27-alpha)
 
 这份指南面向第一次安装的用户。QuotaMate 用于整理支持的本机 AI 用量，不提供模型对话，也不会因登录就同步所有云端聊天历史。
 
@@ -21,10 +21,10 @@
 
 ## 下载与安装
 
-1. 点击 **[直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.26-alpha/QuotaMate-0.1.26-macos-universal.dmg)**，保存到下载文件夹。
+1. 点击 **[直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-macos-universal.dmg)**，保存到下载文件夹。
 2. 双击打开 DMG，将 **QuotaMate** 拖到 **Applications / 应用程序**。
 3. 从「应用程序」启动；若已安装旧版，先退出旧版再替换。
-4. 不想使用 DMG 时，可 [下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.26-alpha/QuotaMate-0.1.26-macos-universal.zip)，解压后把 `QuotaMate.app` 放到「应用程序」。
+4. 不想使用 DMG 时，可 [下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-macos-universal.zip)，解压后把 `QuotaMate.app` 放到「应用程序」。
 
 安装包是 Alpha 开发测试包，仅有 ad-hoc 本地签名，未使用 Apple Developer ID 签名或公证。是否运行由你自行决定。
 
@@ -38,10 +38,10 @@
 
 ### 可选：检查下载是否完整
 
-将 [SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.26-alpha/SHA256SUMS) 与下载文件放在同一目录。在终端进入该目录后执行：
+将 [SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/SHA256SUMS) 与下载文件放在同一目录。在终端进入该目录后执行：
 
 ```sh
-shasum -a 256 QuotaMate-0.1.26-macos-universal.dmg
+shasum -a 256 QuotaMate-0.1.27-macos-universal.dmg
 ```
 
 将输出与 `SHA256SUMS` 中同名文件的值比较。若同时下载了 DMG 和 ZIP，也可执行 `shasum -a 256 -c SHA256SUMS` 一次检查两者；只下载一个时，完整清单会提示另一个文件缺失。校验值仅用于检查文件一致性，不等于 Apple 公证或安全认证。
@@ -117,6 +117,8 @@ QuotaMate 不要求你提供订阅令牌、Cookie 或授权码，也不会保存
 采集会保留原状态栏输出，关闭可恢复原设置。它针对终端会话，桌面 Code 标签不保证执行该状态栏，Cowork 和其他远程记录也尚未完整适配。
 
 ### 4. 查看来源和时间
+
+在统计页打开 **账户额度** 查看该周期的采样，或切换 **Token 与成本**；空周期可点 **查看最近有记录的一天**。部分记录缺少价格时会显示已计价小计和覆盖条数。
 
 总览显示 **快照剩余** 及采集时间；悬停或查看数据来源可获取更多信息。刷新只读取现有快照，不会把旧数据变成实时结果。缺少、过期或身份不匹配时，额度会保持未知，但支持的本机 Token 统计仍可使用。
 

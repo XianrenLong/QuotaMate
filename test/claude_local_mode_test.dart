@@ -134,6 +134,17 @@ QUOTAMATE_TEST_AUTH
         c.navigate(0);
         await tester.pumpWidget(QuotaMateApp(controller: c));
         await tester.pumpAndSettle();
+        await tester.tap(
+          find.text(language == AppLanguage.zh ? 'Token 与成本' : 'Tokens & cost'),
+        );
+        await tester.pumpAndSettle();
+        final emptyCost = language == AppLanguage.zh
+            ? '暂无可计价记录'
+            : 'No usage to price';
+        expect(find.text(emptyCost), findsOneWidget);
+        await tester.tap(find.text(emptyCost));
+        await tester.pumpAndSettle();
+        expect(c.page, 0);
         final text = language == AppLanguage.zh
             ? '网页与普通桌面聊天暂无 Token 明细。'
             : 'Token details for web and regular desktop chat are unavailable.';
@@ -141,6 +152,7 @@ QUOTAMATE_TEST_AUTH
         final action = language == AppLanguage.zh
             ? '查看数据设置'
             : 'Open data settings';
+        await tester.ensureVisible(find.text(action).last);
         await tester.tap(find.text(action).last);
         await tester.pumpAndSettle();
         expect(c.page, 4);

@@ -205,15 +205,77 @@ class AppController extends ChangeNotifier {
       account?.authMode == 'chatgpt' &&
       account?.email?.isNotEmpty == true &&
       (account?.availableQuotaResets ?? 0) > 0;
+  bool claudeQuotaTab = true;
+  DateTime? historicalDay;
+  List<AccountSnapshot> _samples = [];
+  String? _sampleScope;
+  DateTime get rangeEnd => historicalDay == null
+      ? now
+      : DateTime(
+          historicalDay!.year,
+          historicalDay!.month,
+          historicalDay!.day + 1,
+        ).subtract(const Duration(microseconds: 1));
+  DateTime get rangeStart => DateTime(
+    rangeEnd.year,
+    rangeEnd.month,
+    rangeEnd.day - (historicalDay == null ? days - 1 : 0),
+  );
   List<UsageEvent> get events {
-    final cutoff = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(Duration(days: days - 1));
+    final start = rangeStart, end = rangeEnd;
     return all
-        .where((e) => !e.at.isBefore(cutoff) && !e.at.isAfter(now))
+        .where((e) => !e.at.isBefore(start) && !e.at.isAfter(end))
         .toList();
+  }
+
+  DateTime? get latestUsageDate {
+    DateTime? last;
+    for (final e in all) {
+      if (!e.at.isAfter(now) && (last == null || e.at.isAfter(last))) {
+        last = e.at;
+      }
+    }
+    return last?.toLocal();
+  }
+
+  void viewLastUsageDay() {
+    final last = latestUsageDate;
+    if (!isClaude || last == null) return;
+    historicalDay = DateTime(last.year, last.month, last.day);
+    claudeQuotaTab = false;
+    _notify();
+  }
+
+  void selectClaudeStatistics(bool quota) {
+    historicalDay = null;
+    claudeQuotaTab = quota;
+    _notify();
+  }
+
+  List<AccountSnapshot> get quotaSamples {
+    if (!isClaude ||
+        (!demo &&
+            (!accountVerified ||
+                !quotaEnabled ||
+                account?.authMode != 'claude'))) {
+      return [];
+    }
+    final identity = account?.identityFingerprint;
+    if (!demo && identity == null) return [];
+    final samples = <(String, DateTime), AccountSnapshot>{};
+    for (final sample in [
+      if (!demo && _sampleScope == profile.scope) ..._samples,
+      ?account,
+    ]) {
+      if (sample.identityFingerprint == identity &&
+          (sample.primary != null || sample.secondary != null) &&
+          (!sample.observed.isAfter(now.add(const Duration(minutes: 1)))) &&
+          (readSubscriptionDates || sample.source != 'Claude 配置额度快照')) {
+        samples[(sample.source, sample.observed)] = sample;
+      }
+    }
+    return samples.values.toList()
+      ..sort((a, b) => b.observed.compareTo(a.observed));
   }
 
   UsageSummary get summary => UsageSummary(events);
@@ -227,6 +289,9 @@ class AppController extends ChangeNotifier {
         .toList(),
   );
   List<double> values({bool requests = false, int? period}) {
+    if (historicalDay != null && period == null) {
+      return [requests ? events.length.toDouble() : summary.total.toDouble()];
+    }
     final n = period ?? days;
     final start = DateTime(
       now.year,
@@ -303,6 +368,11 @@ class AppController extends ChangeNotifier {
   }
 
   void _load({bool resetAccount = true}) {
+    if (resetAccount) {
+      historicalDay = null;
+      _samples = [];
+      _sampleScope = null;
+    }
     if (demo) {
       account = demoAccount(now, claude: isClaude);
       all = demoEvents(now, claude: isClaude);
@@ -385,6 +455,8 @@ class AppController extends ChangeNotifier {
                 readSubscriptionDates: readSubscriptionDates,
               );
               if (profile.scope == scope) {
+                _samples = result.samples;
+                _sampleScope = profile.scope;
                 account = result.account;
                 accountVerified = true;
                 claudeSignedIn = result.authenticated;
@@ -531,12 +603,14 @@ class AppController extends ChangeNotifier {
   }
 
   void navigate(int index) {
+    if (page != index) historicalDay = null;
     page = index;
     message = null;
     _notify();
   }
 
   void setDays(int value) {
+    historicalDay = null;
     days = value;
     _notify();
   }
@@ -604,6 +678,8 @@ class AppController extends ChangeNotifier {
           readSubscriptionDates: readSubscriptionDates,
         );
         if (!_disposed) {
+          _samples = result.samples;
+          _sampleScope = profile.scope;
           account = result.account;
           accountVerified = true;
           claudeSignedIn = result.authenticated;
@@ -883,7 +959,7 @@ class AppController extends ChangeNotifier {
         account = account!.withSubscriptionDates(null);
       }
     });
-    if (enabled) await refresh();
+    if (enabled || account?.source == 'Claude 配置额度快照') await refresh();
   }
 
   Future<void> _syncLanguage() async {
@@ -967,6 +1043,11 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> export() async {
+    if (isClaude && page == 0 && claudeQuotaTab) {
+      message = '请在 Token 与成本视图导出用量明细。';
+      _notify();
+      return;
+    }
     String cell(String s) {
       final safe = RegExp(r'^[=+@\-\t\r]').hasMatch(s) ? "'$s" : s;
       return '"${safe.replaceAll('"', '""')}"';
@@ -996,7 +1077,7 @@ class AppController extends ChangeNotifier {
     }
     final path = await NativeBridge.call<String>('saveCsv', {
       'name': strings.text(
-        '$providerLabel-用量统计-${now.year}-${now.month}-${now.day}.csv',
+        '$providerLabel-用量统计-${rangeEnd.year}-${rangeEnd.month}-${rangeEnd.day}.csv',
       ),
       'content': '\uFEFF${lines.join('\r\n')}',
     });

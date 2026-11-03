@@ -162,6 +162,16 @@ class ConnectionDiagnostics {
                   readSubscriptionDates: false,
                 ));
         email = result.account.email;
+        if (result.authenticated &&
+            (result.account.primary != null ||
+                result.account.secondary != null)) {
+          final at = result.account.observed
+              .toLocal()
+              .toString()
+              .split('.')
+              .first;
+          add('sampleTime', '额度采集时间', at, CheckState.passed);
+        }
         add(
           'account',
           '所选工具账号',

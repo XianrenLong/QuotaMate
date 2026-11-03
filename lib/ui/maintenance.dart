@@ -75,6 +75,19 @@ class ConnectionHealthPanel extends StatelessWidget {
               ),
             ),
           ],
+          if (c.isClaude) ...[
+            const SizedBox(height: 10),
+            label(
+              '今日可计价记录：${c.today.pricedCount}/${c.today.requests}',
+              size: 12,
+            ),
+            if (c.latestUsageDate case final day?)
+              label(
+                '最近导入记录：${day.toIso8601String().substring(0, 10)}',
+                size: 12,
+              ),
+            LocalizedText('桌面 Code 请核对会话环境。本机使用所选配置目录，SSH 和云端会话需在对应运行环境核对日志。'),
+          ],
           for (final check in report.checks) ...[
             const Divider(height: 24),
             Row(

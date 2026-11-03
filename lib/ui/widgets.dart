@@ -296,6 +296,8 @@ class NumberCard extends StatelessWidget {
                 ),
               ),
             ),
+            if (caption != null)
+              label(caption!, size: 11, color: themeColor(context, C.muted)),
           ],
         ),
       );

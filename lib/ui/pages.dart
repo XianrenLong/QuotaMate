@@ -11,6 +11,7 @@ import 'widgets.dart';
 import 'localized.dart';
 import 'usage_details_table.dart';
 import 'subscription_badge.dart';
+import 'claude_limits.dart';
 import 'overview_account.dart';
 import '../data/subscription_info.dart';
 
@@ -32,8 +33,12 @@ Widget canvas(Widget Function(double height) builder, {double minimum = 650}) =>
         ),
       ),
     );
-String money(UsageSummary s) =>
-    s.cost == null ? '未配置' : '\$${s.cost!.toStringAsFixed(2)}';
+String money(UsageSummary s) {
+  if (s.events.isEmpty) return '暂无可计价记录';
+  final cost = s.knownCost;
+  return cost == null ? '未配置单价' : '\$${cost.toStringAsFixed(2)}';
+}
+
 String weeklyLabel(QuotaWindow? w) => w?.minutes == 10080 ? '本周剩余' : '较长窗口剩余';
 int? validRemaining(QuotaWindow? w, DateTime now) =>
     w == null || w.expired(now) ? null : w.remaining;
@@ -57,7 +62,7 @@ class PeriodStrip extends StatelessWidget {
         SizedBox(width: 14),
         Segments(
           ['今日', '近7天', '近30天'],
-          [1, 7, 30].indexOf(c.days),
+          c.historicalDay == null ? [1, 7, 30].indexOf(c.days) : -1,
           (i) => c.setDays([1, 7, 30][i]),
         ),
         if (statistics) ...[
@@ -72,15 +77,16 @@ class PeriodStrip extends StatelessWidget {
             ),
           ),
           SizedBox(width: 12),
-          IconButton(
-            tooltip: AppLocale.text(context, '导出统计'),
-            onPressed: () => c.export(),
-            icon: Icon(
-              LucideIcons.share,
-              size: 18,
-              color: themeColor(context, C.muted),
+          if (!c.isClaude || !c.claudeQuotaTab)
+            IconButton(
+              tooltip: AppLocale.text(context, '导出统计'),
+              onPressed: () => c.export(),
+              icon: Icon(
+                LucideIcons.share,
+                size: 18,
+                color: themeColor(context, C.muted),
+              ),
             ),
-          ),
         ] else ...[
           Spacer(),
           label('自动刷新', size: 13, color: themeColor(context, C.muted)),
@@ -91,14 +97,10 @@ class PeriodStrip extends StatelessWidget {
     ),
   );
   String _range() {
-    final start = DateTime(
-      c.now.year,
-      c.now.month,
-      c.now.day,
-    ).subtract(Duration(days: c.days - 1));
+    final start = c.rangeStart;
     String date(DateTime d) =>
         '${d.year}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')}';
-    return '${date(start)} — ${date(c.now)}';
+    return '${date(start)} — ${date(c.rangeEnd)}';
   }
 }
 
@@ -131,11 +133,13 @@ class _OverviewPageState extends State<OverviewPage> {
                   message: '今日用量按 API 参考价折算，不代表订阅实际扣费；小图显示近7天费用趋势。',
                   child: NumberCard(
                     '等价估算',
-                    todayCost.events.isEmpty ? '\$0.00' : money(todayCost),
+                    money(todayCost),
                     LucideIcons.circleDollarSign,
                     caption:
                         todayCost.events.isNotEmpty && !todayCost.fullyPriced
-                        ? '配置模型价格'
+                        ? (todayCost.partiallyPriced
+                              ? '已计价 ${todayCost.pricedCount}/${todayCost.requests} 条'
+                              : '配置模型价格')
                         : '今日 · 参考价折算',
                     onTap: todayCost.events.isNotEmpty && !todayCost.fullyPriced
                         ? () => c.navigate(4)
@@ -836,20 +840,38 @@ class _StatisticsPageState extends State<StatisticsPage> {
   Widget build(BuildContext context) {
     final c = widget.c;
     final s = c.summary;
+    if (c.isClaude && c.claudeQuotaTab) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _claudeTabs(c),
+          const SizedBox(height: 8),
+          SizedBox(height: 51, child: PeriodStrip(c, statistics: true)),
+          const SizedBox(height: 12),
+          Expanded(child: ClaudeLimits(c)),
+        ],
+      );
+    }
     return canvas(
       (height) => Column(
         children: [
+          if (c.isClaude) ...[_claudeTabs(c), const SizedBox(height: 8)],
           SizedBox(height: 51, child: PeriodStrip(c, statistics: true)),
           SizedBox(height: 12),
           SizedBox(
             height: 84,
             child: split([
               NumberCard(
-                '成本估算',
+                s.partiallyPriced ? '已计价小计' : '成本估算',
                 money(s),
                 LucideIcons.circleDollarSign,
                 compactCentered: true,
-                onTap: s.fullyPriced ? null : () => c.navigate(4),
+                caption: s.partiallyPriced
+                    ? '已计价 ${s.pricedCount}/${s.requests} 条'
+                    : null,
+                onTap: s.events.isNotEmpty && !s.fullyPriced
+                    ? () => c.navigate(4)
+                    : null,
               ),
               NumberCard(
                 '记录次数',
@@ -896,7 +918,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
                                     : '选择其他时间范围，或同步本机记录。',
                                 onTap: c.isClaude ? () => c.navigate(4) : null,
                               )
-                            : UsageChart(c.values(), c.now, showDates: false),
+                            : UsageChart(
+                                c.values(),
+                                c.rangeEnd,
+                                showDates: false,
+                              ),
                       ),
                     ],
                   ),
@@ -956,9 +982,30 @@ class _StatisticsPageState extends State<StatisticsPage> {
           ),
         ],
       ),
-      minimum: 560,
+      minimum: c.isClaude ? 650 : 560,
     );
   }
+
+  Widget _claudeTabs(AppController c) => Row(
+    children: [
+      Segments(
+        ['账户额度', 'Token 与成本'],
+        c.claudeQuotaTab ? 0 : 1,
+        (i) => c.selectClaudeStatistics(i == 0),
+      ),
+      const Spacer(),
+      if (!c.claudeQuotaTab && c.events.isEmpty && c.latestUsageDate != null)
+        TextButton(
+          onPressed: c.viewLastUsageDay,
+          child: const LocalizedText('查看最近有记录的一天'),
+        ),
+      if (c.historicalDay != null)
+        TextButton(
+          onPressed: () => c.setDays(1),
+          child: const LocalizedText('返回今日'),
+        ),
+    ],
+  );
 
   Widget _tokenRow(String title, int value, int total) => Builder(
     builder: (context) => Column(
@@ -1077,7 +1124,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   label(compact(s.input), size: 12),
                   label(compact(s.output), size: 12),
                   label(
-                    s.cost == null ? '未配置单价' : money(s),
+                    s.partiallyPriced
+                        ? '${money(s)} · ${s.pricedCount}/${s.requests}'
+                        : money(s),
                     size: 12,
                     color: s.cost == null
                         ? themeColor(context, C.muted)
