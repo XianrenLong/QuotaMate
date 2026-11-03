@@ -2,10 +2,14 @@ import Cocoa
 import FlutterMacOS
 import UniformTypeIdentifiers
 import UserNotifications
+import SwiftUI
 
 class MainFlutterWindow: NSWindow {
   private var bridge: FlutterMethodChannel!
   private var statusItem: NSStatusItem!
+  private let panel = TrayPanelModel()
+  private let popover = NSPopover()
+  private var panelHost: NSHostingController<TrayPanelView>!
   private var english = false
   override func awakeFromNib() {
     let controller = FlutterViewController()
@@ -31,17 +35,49 @@ class MainFlutterWindow: NSWindow {
     statusItem.button?.image = NSImage(systemSymbolName: "hourglass", accessibilityDescription: "QuotaMate")
     statusItem.button?.imagePosition = .imageLeading
     statusItem.button?.title = " GPT"
-    updateTrayMenu()
+    statusItem.button?.target = self
+    statusItem.button?.action = #selector(togglePanel)
+    panel.onProvider = { [weak self] id in self?.bridge.invokeMethod("selectProvider", arguments: ["provider": id]) }
+    panel.onRefresh = { [weak self] in self?.refreshUsage() }
+    panel.onOpen = { [weak self] in self?.popover.performClose(nil); self?.showWindow() }
+    panel.onSettings = { [weak self] in
+      self?.popover.performClose(nil); self?.showWindow()
+      self?.bridge.invokeMethod("openPage", arguments: ["page": 4])
+    }
+    panelHost = NSHostingController(rootView: TrayPanelView(model: panel))
+    popover.contentViewController = panelHost
+    popover.behavior = .transient
+    popover.animates = true
+    resizePanel()
   }
-  private func updateTrayMenu() {
-    let menu = NSMenu()
-    let open = menu.addItem(withTitle: english ? "Open QuotaMate" : "打开 QuotaMate", action: #selector(showWindow), keyEquivalent: "")
-    open.target = self
-    let refresh = menu.addItem(withTitle: english ? "Refresh limits" : "刷新额度", action: #selector(refreshUsage), keyEquivalent: "")
-    refresh.target = self
-    menu.addItem(.separator())
-    menu.addItem(withTitle: english ? "Quit QuotaMate" : "退出 QuotaMate", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-    statusItem.menu = menu
+  @objc private func togglePanel() {
+    guard let button = statusItem.button else { return }
+    if popover.isShown { popover.performClose(nil); return }
+    resizePanel()
+    popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+    popover.contentViewController?.view.window?.makeKey()
+    NSApp.activate(ignoringOtherApps: true)
+  }
+  private func resizePanel() {
+    panelHost.view.layoutSubtreeIfNeeded()
+    popover.contentSize = panelHost.view.fittingSize
+  }
+  private func updateTray(_ args: [String: Any]) {
+    let title = args["title"] as? String ?? "GPT"
+    let button = statusItem.button
+    button?.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
+    let warning = args["warning"] as? Bool ?? false
+    let attributes: [NSAttributedString.Key: Any] = [
+      .font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
+      .foregroundColor: warning ? NSColor.systemOrange : NSColor.controlTextColor,
+    ]
+    button?.attributedTitle = NSAttributedString(string: title.isEmpty ? "" : " " + title, attributes: attributes)
+    button?.contentTintColor = warning ? .systemOrange : nil
+    button?.toolTip = args["tooltip"] as? String
+    if let data = args["panel"] as? [String: Any] {
+      panel.data = TrayPanelData(data)
+      resizePanel()
+    }
   }
   @objc private func showWindow() { makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
   @objc private func refreshUsage() { bridge.invokeMethod("refresh", arguments: nil) }
@@ -53,11 +89,11 @@ class MainFlutterWindow: NSWindow {
       let selected: NSAppearance? = mode == "dark" ? NSAppearance(named: .darkAqua) : mode == "light" ? NSAppearance(named: .aqua) : nil
       NSApp.appearance = selected
       appearance = selected
+      popover.appearance = selected
       backgroundColor = NSColor.windowBackgroundColor
       result(nil)
     case "setLanguage":
       english = args["language"] as? String == "en"
-      updateTrayMenu()
       result(nil)
     case "dragWindow": if let event = NSApp.currentEvent { performDrag(with: event) }; result(nil)
     case "chooseDirectory":
@@ -93,7 +129,7 @@ class MainFlutterWindow: NSWindow {
       NSWorkspace.shared.open([URL(fileURLWithPath: path)], withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"), configuration: .init()) { _, error in
         DispatchQueue.main.async { result(error == nil) }
       }
-    case "updateTray": statusItem.button?.title = " " + (args["title"] as? String ?? "GPT"); statusItem.button?.toolTip = args["tooltip"] as? String; result(nil)
+    case "updateTray": updateTray(args); result(nil)
     case "requestNotifications": UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in DispatchQueue.main.async { result(granted) } }
     case "notify":
       let content = UNMutableNotificationContent(); content.title = args["title"] as? String ?? (english ? "Limit alert" : "额度提醒"); content.body = args["body"] as? String ?? ""

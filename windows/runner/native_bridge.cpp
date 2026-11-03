@@ -3,6 +3,7 @@
 #include <flutter/standard_method_codec.h>
 #include <dwmapi.h>
 #include <shobjidl.h>
+#include <windowsx.h>
 #include <shlobj.h>
 #include <wrl/client.h>
 #include <algorithm>
@@ -66,11 +67,21 @@ NativeBridge::NativeBridge(HWND window, flutter::BinaryMessenger* messenger)
   tray_.uCallbackMessage = kTrayMessage;
   tray_.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON));
   wcscpy_s(tray_.szTip, L"QuotaMate");
+  panel_ = std::make_unique<TrayPanel>(TrayPanel::Actions{
+      [this](const std::string& id) { Invoke("selectProvider", {{EncodableValue("provider"), EncodableValue(id)}}); },
+      [this] { channel_->InvokeMethod("refresh", nullptr); },
+      [this] { ShowMainWindow(); },
+      [this] { ShowMainWindow(); Invoke("openPage", {{EncodableValue("page"), EncodableValue(4)}}); },
+      [this] { PostMessageW(window_, WM_APP + 43, 0, 0); }});
   AddTray();
   ApplyAppearance();
 }
+void NativeBridge::Invoke(const char* method, EncodableMap args) {
+  channel_->InvokeMethod(method, std::make_unique<EncodableValue>(std::move(args)));
+}
 NativeBridge::~NativeBridge() {
   channel_->SetMethodCallHandler(nullptr);
+  panel_.reset();
   if (tray_added_) Shell_NotifyIconW(NIM_DELETE, &tray_);
   RemovePropW(window_, L"QuotaMate.TrayAvailable");
   RemovePropW(window_, L"QuotaMate.CloseToTray");
@@ -99,6 +110,7 @@ void NativeBridge::ApplyAppearance() {
   }
   // DWMWA_USE_IMMERSIVE_DARK_MODE (20), supported on current Windows 10/11.
   DwmSetWindowAttribute(window_, 20, &dark, sizeof(dark));
+  if (panel_) panel_->SetDark(dark != FALSE);
 }
 bool NativeBridge::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam) {
   if (message == WM_APP + 43) { quitting_ = true; PostMessageW(window_, WM_CLOSE, 0, 0); return true; }
@@ -112,9 +124,14 @@ bool NativeBridge::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam) {
   if (message == WM_DWMCOLORIZATIONCOLORCHANGED) { ApplyAppearance(); return true; }
   if (message != kTrayMessage) return false;
   const UINT event = LOWORD(lparam);
-  if (event == NIN_SELECT || event == NIN_KEYSELECT || event == WM_LBUTTONDBLCLK) {
+  if (event == NIN_SELECT || event == NIN_KEYSELECT) {
+    // NOTIFYICON_VERSION_4 passes the icon's anchor point in wparam.
+    panel_->Toggle(POINT{GET_X_LPARAM(wparam), GET_Y_LPARAM(wparam)});
+  } else if (event == WM_LBUTTONDBLCLK) {
+    panel_->Hide();
     ShowMainWindow();
   } else if (event == WM_CONTEXTMENU || event == WM_RBUTTONUP) {
+    panel_->Hide();
     const HMENU menu = CreatePopupMenu();
     AppendMenuW(menu, MF_STRING, kOpen, english_ ? L"Open QuotaMate" : L"打开 QuotaMate");
     AppendMenuW(menu, MF_STRING, kRefresh, english_ ? L"Refresh limits" : L"刷新额度");
@@ -223,7 +240,12 @@ void NativeBridge::HandleCall(const flutter::MethodCall<EncodableValue>& call,
     const auto params = L"-NoLogo -NoProfile -NoExit -EncodedCommand " + Wide(encoded);
     result->Success(EncodableValue(Open(window_, PowerShell(), params.c_str()))); return;
   } else if (method == "updateTray") {
-    const auto tooltip = Wide("QuotaMate · " + Argument(args, "title") + "\n" + Argument(args, "tooltip"));
+    const auto title = Argument(args, "title");
+    const auto tooltip = Wide("QuotaMate" + (title.empty() ? "" : " · " + title) + "\n" + Argument(args, "tooltip"));
+    const auto panel = args ? args->find(EncodableValue("panel")) : EncodableMap::const_iterator{};
+    if (args && panel != args->end()) {
+      if (const auto* data = std::get_if<EncodableMap>(&panel->second)) panel_->Update(*data);
+    }
     wcsncpy_s(tray_.szTip, tooltip.c_str(), _TRUNCATE);
     tray_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     Shell_NotifyIconW(NIM_MODIFY, &tray_);

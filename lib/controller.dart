@@ -22,6 +22,8 @@ import 'data/claude_connection.dart';
 import 'data/claude_pricing.dart';
 import 'data/connection_diagnostics.dart';
 import 'data/app_updates.dart';
+import 'data/quota_forecast.dart';
+import 'tray_panel.dart';
 
 class AppController extends ChangeNotifier {
   final LocalStore store;
@@ -55,6 +57,7 @@ class AppController extends ChangeNotifier {
   String? updateMessage;
   DateTime? updateCheckedAt;
   UpdateChannel updateChannel = UpdateChannel.alpha;
+  TrayTitle trayTitle = TrayTitle.percent;
   bool get isWindows => Platform.isWindows;
 
   int page = 0, days = 1, refreshMinutes = 5, threshold = 20;
@@ -95,6 +98,10 @@ class AppController extends ChangeNotifier {
     updateChannel = s['updateChannel'] == 'stable'
         ? UpdateChannel.stable
         : UpdateChannel.alpha;
+    trayTitle = TrayTitle.values.firstWhere(
+      (value) => value.name == s['trayTitle'],
+      orElse: () => TrayTitle.percent,
+    );
     refreshMinutes = (s['refreshMinutes'] as int? ?? 5).clamp(1, 60);
     threshold = (s['threshold'] as int? ?? 20).clamp(1, 99);
     executable = s['executable'];
@@ -135,7 +142,19 @@ class AppController extends ChangeNotifier {
       prices,
     );
     NativeBridge.channel.setMethodCallHandler((call) async {
-      if (call.method == 'refresh') await refresh();
+      final args = call.arguments is Map ? call.arguments as Map : const {};
+      switch (call.method) {
+        case 'refresh':
+          await refresh();
+        case 'selectProvider':
+          await selectProvider(
+            args['provider'] == 'claude' ? AiProvider.claude : AiProvider.gpt,
+          );
+        case 'openPage':
+          if (args['page'] case final int index when index >= 0 && index <= 4) {
+            navigate(index);
+          }
+      }
     });
     _load();
   }
@@ -281,6 +300,97 @@ class AppController extends ChangeNotifier {
       ..sort((a, b) => b.observed.compareTo(a.observed));
   }
 
+  /// Readings of one window for the selected account, oldest first. Only the
+  /// same identity is compared, so a switched login never shapes a forecast.
+  List<(DateTime, QuotaWindow)> quotaTrend({bool secondary = false}) {
+    QuotaWindow? pick(AccountSnapshot a) => secondary ? a.secondary : a.primary;
+    final current = account == null ? null : pick(account!);
+    if (demo) {
+      if (current == null) return [];
+      final earlier = QuotaWindow(
+        (current.used - 8).clamp(0, 100).toDouble(),
+        current.minutes,
+        current.resets,
+      );
+      return [
+        (now.subtract(const Duration(minutes: 40)), earlier),
+        (now, current),
+      ];
+    }
+    if (account == null) return [];
+    final readings = <DateTime, QuotaWindow>{};
+    final saved = store.get('quota-trend:${profile.scope}');
+    for (final item in saved is List ? saved : const []) {
+      if (item is! Map) continue;
+      final sample = AccountSnapshot.fromJson(Map<String, dynamic>.from(item));
+      final window = pick(sample);
+      if (window != null && _sameIdentity(sample, account!)) {
+        readings[sample.observed] = window;
+      }
+    }
+    for (final sample in quotaSamples) {
+      final window = pick(sample);
+      if (window != null) readings[sample.observed] = window;
+    }
+    if (current != null && presentedQuota(current) != null) {
+      readings[account!.observed] = current;
+    }
+    return readings.entries.map((e) => (e.key, e.value)).toList()
+      ..sort((a, b) => a.$1.compareTo(b.$1));
+  }
+
+  QuotaForecast? forecast({bool secondary = false}) {
+    final window = secondary ? account?.secondary : account?.primary;
+    if (presentedQuota(window) == null) return null;
+    return QuotaForecast.project(quotaTrend(secondary: secondary), now);
+  }
+
+  /// The cached account of the provider not on screen, for a side glance.
+  AccountSnapshot? get otherAccount {
+    final other = isClaude ? AiProvider.gpt : AiProvider.claude;
+    if (demo) return demoAccount(now, claude: other == AiProvider.claude);
+    final list = _allProfiles.where((p) => p.provider == other).toList();
+    if (list.isEmpty) return null;
+    final index = (_selectedByProvider[other] ?? 0).clamp(0, list.length - 1);
+    final cached = store.get('quota:${list[index].scope}');
+    return cached is Map
+        ? AccountSnapshot.fromJson(Map<String, dynamic>.from(cached))
+        : null;
+  }
+
+  static bool _sameIdentity(AccountSnapshot a, AccountSnapshot b) =>
+      a.identityFingerprint == b.identityFingerprint && a.email == b.email;
+
+  static bool _keepTrend(
+    dynamic observed,
+    DateTime cutoff,
+    AccountSnapshot latest,
+  ) {
+    final at = DateTime.tryParse(observed?.toString() ?? '');
+    return at != null && at.isAfter(cutoff) && at != latest.observed;
+  }
+
+  void _recordTrend(String scope, AccountSnapshot snapshot) {
+    if (snapshot.primary == null && snapshot.secondary == null) return;
+    final saved = store.get('quota-trend:$scope');
+    final cutoff = now.subtract(const Duration(hours: 26));
+    final kept = <Map>[
+      for (final item in saved is List ? saved : const [])
+        if (item is Map && _keepTrend(item['observed'], cutoff, snapshot)) item,
+      {
+        'observed': snapshot.observed.toIso8601String(),
+        'email': snapshot.email,
+        'identityFingerprint': snapshot.identityFingerprint,
+        'primary': snapshot.primary?.toJson(),
+        'secondary': snapshot.secondary?.toJson(),
+      },
+    ];
+    store.set(
+      'quota-trend:$scope',
+      kept.length > 400 ? kept.sublist(kept.length - 400) : kept,
+    );
+  }
+
   UsageSummary get summary => UsageSummary(events);
   UsageSummary get today => UsageSummary(
     all
@@ -415,6 +525,16 @@ class AppController extends ChangeNotifier {
       ticks++;
       unawaited(checkForBackgroundUpdate());
       _notify();
+      // Countdowns and forecasts age between refreshes.
+      if (!busy) {
+        unawaited(() async {
+          try {
+            await _updateTray();
+          } catch (_) {
+            /* Tray is optional. */
+          }
+        }());
+      }
       if (!autoRefresh || demo || busy) return;
       if (ticks % 2 == 0) {
         await refresh(remote: ticks % (refreshMinutes * 2) == 0);
@@ -467,6 +587,7 @@ class AppController extends ChangeNotifier {
                 claudeSignedIn = result.authenticated;
                 claudeCollectorEnabled = result.collectorEnabled;
                 store.set('quota:$scope', account!.toJson());
+                _recordTrend(scope, account!);
                 if (!claudeSignedIn) {
                   message = 'Claude Code 尚未登录，本机历史已保留。可点击登录连接账号。';
                 } else {
@@ -488,6 +609,7 @@ class AppController extends ChangeNotifier {
                 account = snapshot;
                 accountVerified = true;
                 store.set('quota:$scope', snapshot.toJson());
+                _recordTrend(scope, snapshot);
                 if (!snapshot.signedIn) message = '请先在 Codex 中登录，随后刷新额度。';
                 if (snapshot.authMode == 'apiKey') {
                   message = 'API Key 模式可统计本机用量，不提供订阅剩余百分比。';
@@ -569,20 +691,19 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _updateTray() async {
-    await NativeBridge.call('updateTray', {
-      'title': strings.text(
-        demo
-            ? '$providerLabel 演示'
-            : quotaValid
-            ? '$providerLabel ${activeWindow!.remaining}%'
-            : '$providerLabel —',
-      ),
-      'tooltip': strings.text(
-        quotaValid
-            ? '当前窗口剩余 ${activeWindow!.remaining}% · ${countdown(activeWindow!.resets, now)}后重置'
-            : '${AppInfo.name} · $status',
-      ),
-    });
+    await NativeBridge.call('updateTray', trayPayload(this));
+  }
+
+  Future<void> setTrayTitle(TrayTitle value) async {
+    if (trayTitle == value) return;
+    trayTitle = value;
+    save();
+    _notify();
+    try {
+      await _updateTray();
+    } catch (_) {
+      /* Tray is optional. */
+    }
   }
 
   Future<void> _checkAlerts() async {
@@ -812,6 +933,7 @@ class AppController extends ChangeNotifier {
       'automaticUpdateChecks': automaticUpdateChecks,
       'refreshMinutes': refreshMinutes,
       'threshold': threshold,
+      'trayTitle': trayTitle.name,
       'executable': executable,
       'profiles': _allProfiles.map((e) => e.toJson()).toList(),
       'selected': _selectedByProvider[AiProvider.gpt] ?? 0,
