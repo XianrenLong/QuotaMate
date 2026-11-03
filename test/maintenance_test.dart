@@ -459,4 +459,59 @@ void main() {
       'setLaunchAtLogin',
     ]);
   }, skip: !Platform.isWindows);
+  test(
+    'configuration-only roots can be selected before any log exists',
+    () async {
+      final directory = Directory.systemTemp.createTempSync(
+        'quota-config-root-',
+      );
+      final root = p.join(directory.path, 'official-profile');
+      Directory(root).createSync();
+      File(p.join(root, 'config.toml'))
+          .writeAsStringSync('# Synthetic official configuration');
+      final store = LocalStore(p.join(directory.path, 'test.db'));
+      store.set('preferences', {'scanEnabled': false, 'quotaEnabled': false});
+      final c = AppController(store);
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            NativeBridge.channel,
+            (call) async => call.method == 'chooseDirectory' ? root : null,
+          );
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(NativeBridge.channel, null);
+        c.dispose();
+        directory.deleteSync(recursive: true);
+      });
+      await c.addProfile();
+      expect(c.profile.root, root);
+      expect(c.all, isEmpty);
+      expect(c.error, isNull);
+    },
+  );
+  test('account changes during checks clear the displayed identity', () async {
+    final directory = Directory.systemTemp.createTempSync(
+      'quota-identity-check-',
+    );
+    addTearDown(() => directory.deleteSync(recursive: true));
+    final report = await ConnectionDiagnostics.run(
+      SourceProfile(directory.path, 'sample'),
+      locate: () async => '/synthetic/tool',
+      identity: (_, _) async => AccountSnapshot(
+        observed: DateTime.now(),
+        authMode: 'chatgpt',
+        email: 'one@example.com',
+      ),
+      quota: (_, _) async => AccountSnapshot(
+        observed: DateTime.now(),
+        authMode: 'chatgpt',
+        email: 'two@example.com',
+      ),
+    );
+    expect(report.email, isNull);
+    expect(
+      report.checks.firstWhere((c) => c.id == 'account').state,
+      CheckState.warning,
+    );
+  });
 }
