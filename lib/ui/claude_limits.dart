@@ -48,14 +48,14 @@ class ClaudeLimits extends StatelessWidget {
           child: Row(
             children: [
               SizedBox.square(
-                dimension: 88,
+                dimension: 104,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     Positioned.fill(
                       child: CircularProgressIndicator(
                         value: window == null ? 0 : (100 - window.used) / 100,
-                        strokeWidth: 7,
+                        strokeWidth: 8,
                         strokeAlign:
                             CircularProgressIndicator.strokeAlignInside,
                         strokeCap: StrokeCap.round,
@@ -65,20 +65,26 @@ class ClaudeLimits extends StatelessWidget {
                     ),
                     label(
                       window == null ? '—' : '${window.remaining}%',
-                      size: 23,
+                      size: 27,
                       weight: FontWeight.w600,
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 18),
+              Container(
+                width: 1,
+                height: 46,
+                color: themeColor(context, C.line),
+              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     label(
                       week ? '每周剩余' : '5 小时剩余',
-                      size: 19,
+                      size: 21,
                       weight: FontWeight.w600,
                       lines: 2,
                     ),
@@ -151,7 +157,7 @@ class ClaudeLimits extends StatelessWidget {
             ['今日', '近7天', '近30天'],
             [1, 7, 30].indexOf(c.days),
             (i) => c.setDays([1, 7, 30][i]),
-            segmentWidth: 92,
+            segmentWidth: 106,
           ),
         ),
         const SizedBox(height: 12),
@@ -356,7 +362,7 @@ class QuotaSegments extends StatelessWidget {
     this.titles,
     this.selected,
     this.onChanged, {
-    this.segmentWidth = 142,
+    this.segmentWidth = 200,
     super.key,
   });
   @override
