@@ -361,6 +361,11 @@ class UsageSummary {
   int get total => input + output;
   int get requests => events.length;
   int get projects => events.map((e) => e.project).toSet().length;
+  int get pricedCount => events.where((e) => e.cost != null).length;
+  double? get knownCost => pricedCount == 0
+      ? null
+      : events.fold<double>(0, (sum, e) => sum + (e.cost ?? 0));
+  bool get partiallyPriced => pricedCount > 0 && pricedCount < requests;
   bool get fullyPriced =>
       events.isNotEmpty && events.every((e) => e.cost != null);
   double? get cost =>

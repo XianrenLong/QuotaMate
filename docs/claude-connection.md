@@ -50,3 +50,9 @@ macOS 采集器使用 Swift，Windows 采集器由 Dart 编译为独立 EXE，�
 开发时可运行 `dart run tool/claude_connection_check.dart` 做只读诊断：它用临时数据库验证导入，只输出是否连接、记录计数与 token 汇总，不输出邮箱、组织标识、对话或凭证。
 
 示例界面预览：[Claude 总览](../screenshots/preview/overview-claude-light-zh.png)、[Claude 设置](../screenshots/preview/settings-claude-dark-zh.png)、[英文统计](../screenshots/preview/statistics-claude-dark-en.png)。预览使用合成账号、虚构路径与假数据，不代表本机已经完成官方登录。
+
+## 额度与成本视图
+
+账户额度使用已核对组织的桌面历史和已核对身份的本机快照，按实际采样时间绘点。单个采样只显示一个时间点。开启自动读取订阅日期时，也读取同一配置中已有的缓存额度字段，并核对账号 UUID、邮箱和组织。缓存的有效重置时间单列展示其原始采集时间。订阅开始和到期分别按原字段显示。
+
+Token 与成本保留今日、近 7 天和近 30 天。当前周期为空时，可转到最近有记录的一天，金额、图表、明细及 CSV 随日期切换。只有部分请求可计价时显示小计和覆盖条数。诊断页显示今日计价覆盖及最近记录日期，桌面 Code 会话可按 Local、SSH、Cloud 环境定位日志。

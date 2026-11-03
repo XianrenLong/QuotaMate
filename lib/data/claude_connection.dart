@@ -14,12 +14,14 @@ class ClaudeAccountChanged implements Exception {}
 class ClaudeConnectionResult {
   final AccountSnapshot account;
   final bool authenticated, collectorEnabled;
+  final List<AccountSnapshot> samples;
   final String? notice;
   const ClaudeConnectionResult(
     this.account,
     this.authenticated,
     this.collectorEnabled, {
     this.notice,
+    this.samples = const [],
   });
 }
 
@@ -233,50 +235,115 @@ class ClaudeConnection {
     );
   }
 
-  static AccountSnapshot? desktop(Json history, Json auth, DateTime now) {
+  static AccountSnapshot? desktop(Json history, Json auth, DateTime now) =>
+      desktopSamples(history, auth, now).firstOrNull;
+
+  static List<AccountSnapshot> desktopSamples(
+    Json history,
+    Json auth,
+    DateTime now,
+  ) {
     final org = auth['orgId'];
     if (auth['loggedIn'] != true ||
         org is! String ||
         org.isEmpty ||
         history['samples'] is! List) {
+      return [];
+    }
+    final fingerprint = identityHash(auth);
+    final result = <AccountSnapshot>[];
+    for (final sample in (history['samples'] as List).whereType<Map>()) {
+      final t = sample['t'], u = sample['u'];
+      if (sample['org'] != org ||
+          t is! num ||
+          !t.isFinite ||
+          t <= 0 ||
+          t >= 4102444800000 ||
+          u is! Map) {
+        continue;
+      }
+      final at = DateTime.fromMillisecondsSinceEpoch(t.toInt());
+      if (at.isAfter(now.add(const Duration(minutes: 1)))) continue;
+      QuotaWindow? window(String key, int minutes) {
+        final used = u[key];
+        return used is num && used.isFinite && used >= 0 && used <= 100
+            ? QuotaWindow(used.toDouble(), minutes, null)
+            : null;
+      }
+
+      final short = window('fh', 300), week = window('sd', 10080);
+      if (short == null && week == null) continue;
+      result.add(
+        AccountSnapshot(
+          email: auth['email'],
+          plan: plan(auth['subscriptionType'], auth['rateLimitTier']),
+          authMode: 'claude',
+          observed: at,
+          source: 'Claude 桌面用量快照',
+          identityFingerprint: fingerprint,
+          primary: short,
+          secondary: week,
+        ),
+      );
+    }
+    return result..sort((a, b) => b.observed.compareTo(a.observed));
+  }
+
+  static AccountSnapshot? profileQuota(Json profile, Json auth, DateTime now) {
+    final owner = profile['oauthAccount'],
+        cache = profile['cachedUsageUtilization'];
+    if (auth['loggedIn'] != true ||
+        !['claude.ai', 'oauth_token'].contains(auth['authMethod']) ||
+        owner is! Map ||
+        cache is! Map ||
+        owner['accountUuid'] is! String ||
+        (owner['accountUuid'] as String).isEmpty ||
+        cache['accountUuid'] != owner['accountUuid'] ||
+        (auth['accountUuid'] != null &&
+            auth['accountUuid'] != owner['accountUuid']) ||
+        (cache.containsKey('organizationUuid') &&
+            cache['organizationUuid'] != auth['orgId']) ||
+        (auth['orgId'] is! String || (auth['orgId'] as String).isEmpty) ||
+        owner['organizationUuid'] != auth['orgId'] ||
+        SubscriptionDateReader.email(auth['email']) == null ||
+        SubscriptionDateReader.email(auth['email']) !=
+            SubscriptionDateReader.email(owner['emailAddress'])) {
       return null;
     }
-    final samples =
-        (history['samples'] as List)
-            .whereType<Map>()
-            .where(
-              (v) =>
-                  v['org'] == org &&
-                  v['t'] is num &&
-                  (v['t'] as num).isFinite &&
-                  (v['t'] as num) > 0 &&
-                  (v['t'] as num) < 4102444800000,
-            )
-            .toList()
-          ..sort((a, b) => (b['t'] as num).compareTo(a['t'] as num));
-    if (samples.isEmpty) return null;
-    final sample = samples.first;
-    final at = DateTime.fromMillisecondsSinceEpoch(
-      (sample['t'] as num).toInt(),
-    );
+    final t = cache['fetchedAtMs'], data = cache['utilization'];
+    if (t is! num ||
+        !t.isFinite ||
+        t <= 0 ||
+        t >= 4102444800000 ||
+        data is! Map) {
+      return null;
+    }
+    final at = DateTime.fromMillisecondsSinceEpoch(t.toInt());
     if (at.isAfter(now.add(const Duration(minutes: 1)))) return null;
-    final usage = sample['u'];
     QuotaWindow? window(String key, int minutes) {
-      final used = usage is Map ? usage[key] : null;
-      return used is num && used.isFinite && used >= 0 && used <= 100
-          ? QuotaWindow(used.toDouble(), minutes, null)
-          : null;
+      final row = data[key];
+      if (row is! Map) return null;
+      final used = row['utilization'];
+      if (used is! num || !used.isFinite || used < 0 || used > 100) return null;
+      final reset = SubscriptionDateReader.date(row['resets_at']);
+      final validReset =
+          reset != null &&
+          reset.isAfter(at) &&
+          !reset.isAfter(at.add(Duration(minutes: minutes + 1)));
+      return QuotaWindow(used.toDouble(), minutes, validReset ? reset : null);
     }
 
+    final short = window('five_hour', 300), week = window('seven_day', 10080);
+    if (short == null && week == null) return null;
     return AccountSnapshot(
       email: auth['email'],
       plan: plan(auth['subscriptionType'], auth['rateLimitTier']),
       authMode: 'claude',
       observed: at,
-      source: 'Claude 桌面用量快照',
+      source: 'Claude 配置额度快照',
       identityFingerprint: identityHash(auth),
-      primary: window('fh', 300),
-      secondary: window('sd', 10080),
+      primary: short,
+      secondary: week,
     );
   }
 
@@ -327,15 +394,18 @@ class ClaudeConnection {
           auth,
           now,
         );
-        final cachedDesktop = p.normalize(root) == p.normalize(defaultRoot)
-            ? desktop(
+        final desktopHistory =
+            (historyPath != null || p.equals(root, p.join(home, '.claude')))
+            ? desktopSamples(
                 await readJson(historyPath ?? DesktopPlatform().claudeHistory),
                 auth,
                 now,
               )
-            : null;
+            : <AccountSnapshot>[];
         final previous =
             sameAccount &&
+                (readSubscriptionDates ||
+                    cachedAccount!.source != 'Claude 配置额度快照') &&
                 !cachedAccount!.observed.isAfter(
                   now.add(const Duration(minutes: 1)),
                 )
@@ -350,9 +420,15 @@ class ClaudeConnection {
                 identityFingerprint: identity,
               )
             : null;
-        final dates = readSubscriptionDates
-            ? await SubscriptionDateReader.claude(root, auth)
+        final profile = readSubscriptionDates
+            ? await SubscriptionDateReader.claudeProfile(root)
             : null;
+        final dates = profile == null
+            ? null
+            : SubscriptionDateReader.fromClaude(profile, auth, now);
+        final profileSample = profile == null
+            ? null
+            : profileQuota(profile, auth, now);
         // Re-check local identity before attributing a snapshot to the account.
         final after = await (authenticate ?? authStatus)(executable!, root);
         if (after['loggedIn'] != true || identityHash(after) != identity) {
@@ -361,7 +437,8 @@ class ClaudeConnection {
         final candidates =
             [
                 ?snapshot,
-                ?cachedDesktop,
+                ...desktopHistory,
+                ?profileSample,
                 ?previous,
               ].where((v) => v.primary != null || v.secondary != null).toList()
               ..sort((a, b) => b.observed.compareTo(a.observed));
@@ -370,6 +447,12 @@ class ClaudeConnection {
           account.withSubscriptionDates(dates),
           true,
           enabled,
+          samples: List.unmodifiable(
+            {
+              for (final sample in candidates)
+                (sample.source, sample.observed): sample,
+            }.values,
+          ),
           notice: candidates.isEmpty
               ? '尚无本地额度快照。可在设置启用状态栏采集，正常使用 Claude Code 后读取。'
               : '额度来自本地快照，保留原采集时间；主动订阅查询已停用。',

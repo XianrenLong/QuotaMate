@@ -155,14 +155,26 @@ abstract final class SubscriptionDateReader {
     String? home,
     Map<String, String>? environment,
   }) async {
+    final data = await claudeProfile(
+      root,
+      home: home,
+      environment: environment,
+    );
+    return data == null ? null : fromClaude(data, auth, DateTime.now());
+  }
+
+  static Future<Json?> claudeProfile(
+    String root, {
+    String? home,
+    Map<String, String>? environment,
+  }) {
     final env = environment ?? Platform.environment;
     final base = home ?? DesktopPlatform(environment: env).home;
     final standard =
         p.normalize(root) == p.normalize(p.join(base, '.claude')) &&
         !env.containsKey('CLAUDE_CONFIG_DIR');
-    final data = await _read(
+    return _read(
       standard ? p.join(base, '.claude.json') : p.join(root, '.claude.json'),
     );
-    return data == null ? null : fromClaude(data, auth, DateTime.now());
   }
 }
