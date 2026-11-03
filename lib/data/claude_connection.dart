@@ -455,7 +455,7 @@ class ClaudeConnection {
           ),
           notice: candidates.isEmpty
               ? '尚无本地额度快照。可在设置启用状态栏采集，正常使用 Claude Code 后读取。'
-              : '额度来自本地快照，保留原采集时间；主动订阅查询已停用。',
+              : null,
         );
       }
       return ClaudeConnectionResult(account, true, enabled);

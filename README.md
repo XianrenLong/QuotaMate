@@ -6,14 +6,14 @@
 <p align="center">适用于 macOS / Windows 的 GPT、Codex 与 Claude Code 本机用量面板。</p>
 <p align="center">
   <a href="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/version-0.1.27%20Alpha-3b82f6?style=flat-square" alt="0.1.27 Alpha">
+  <img src="https://img.shields.io/badge/version-0.1.28%20Alpha-3b82f6?style=flat-square" alt="0.1.28 Alpha">
   <img src="https://img.shields.io/badge/macOS-12%2B-334155?style=flat-square" alt="macOS 12+">
   <img src="https://img.shields.io/badge/Windows-x64_Alpha-334155?style=flat-square" alt="Windows x64 Alpha">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="直接下载 macOS 通用版 DMG"></a>
-  <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-windows-x64-setup.exe"><img src="docs/assets/download-windows.svg" width="320" alt="直接下载 Windows x64 安装程序"></a>
+  <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/QuotaMate-0.1.28-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="直接下载 macOS 通用版 DMG"></a>
+  <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/QuotaMate-0.1.28-windows-x64-setup.exe"><img src="docs/assets/download-windows.svg" width="320" alt="直接下载 Windows x64 安装程序"></a>
 </p>
 <p align="center">
   <a href="#download">下载安装</a> · <a href="#first-run">第一次使用</a> · <a href="#connect-gpt">连接 GPT</a> · <a href="#connect-claude">连接 Claude</a> · <a href="#faq">常见问题</a> · <a href="README.en.md">English</a>
@@ -39,17 +39,17 @@
 
 ## 下载安装
 
-**当前版本：v0.1.27 Alpha · macOS 12+ 通用版 / Windows x64。** 原工具另有系统要求时，以其官方说明为准。
+**当前版本：v0.1.28 Alpha · macOS 12+ 通用版 / Windows x64。** 原工具另有系统要求时，以其官方说明为准。
 
 | 下载项 | 适合谁 | 链接 |
 | --- | --- | --- |
-| **Windows x64 安装程序** | Windows 用户，安装到当前用户目录 | **[直接下载 EXE](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-windows-x64-setup.exe)** |
-| Windows x64 便携 ZIP | 全部解压后启动，无需安装 | [下载 Windows ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-windows-x64.zip) |
-| Windows SHA256 | 校验 Windows 下载文件 | [下载校验文件](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/SHA256SUMS-windows) |
-| **DMG 安装包** | 大多数 Mac 用户，推荐 | **[点击直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-macos-universal.dmg)** |
-| ZIP 压缩包 | 希望解压后手动放入应用程序 | [直接下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-macos-universal.zip) |
-| SHA256 校验文件 | 检查下载是否完整 | [下载校验文件](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/SHA256SUMS) |
-| 版本说明 | 查看更新内容与已知限制 | [打开 Release 页面](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.27-alpha) |
+| **Windows x64 安装程序** | Windows 用户，安装到当前用户目录 | **[直接下载 EXE](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/QuotaMate-0.1.28-windows-x64-setup.exe)** |
+| Windows x64 便携 ZIP | 全部解压后启动，无需安装 | [下载 Windows ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/QuotaMate-0.1.28-windows-x64.zip) |
+| Windows SHA256 | 校验 Windows 下载文件 | [下载校验文件](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/SHA256SUMS-windows) |
+| **DMG 安装包** | 大多数 Mac 用户，推荐 | **[点击直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/QuotaMate-0.1.28-macos-universal.dmg)** |
+| ZIP 压缩包 | 希望解压后手动放入应用程序 | [直接下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/QuotaMate-0.1.28-macos-universal.zip) |
+| SHA256 校验文件 | 检查下载是否完整 | [下载校验文件](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/SHA256SUMS) |
+| 版本说明 | 查看更新内容与已知限制 | [打开 Release 页面](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.28-alpha) |
 
 **Windows：** 下载 EXE 按向导安装，或完整解压 ZIP 后运行 `quota_mate.exe`。[Windows 安装、连接、快捷键与排错 →](docs/windows.md)
 
@@ -67,7 +67,7 @@
 
 ## 第一次使用
 
-**v0.1.26 新增：** [逐项连接诊断、手动检查更新](docs/connection-checks.md)，以及 Windows 可选关闭到托盘、登录启动和单实例唤回。默认不自动检查版本、不注册开机启动。
+**v0.1.26 新增：** [逐项连接诊断、手动检查更新](docs/connection-checks.md)，以及 Windows 可选关闭到托盘、登录启动和单实例唤回。可在设置管理版本检查和登录启动。
 
 **安装 QuotaMate 不需要 Flutter、Python 或 API Key。** 需要在本机已有对应的官方 Codex / Claude Code 工具；查看旧日志不要求当前登录。
 
@@ -250,4 +250,4 @@ bash scripts/package_macos.sh
 
 视觉风格参考 [FlClash](https://github.com/chen08209/FlClash)，日志计时参考 [CC Switch](https://github.com/farion1231/cc-switch) 并保留 MIT 声明；未引入 FlClash 的界面源码或代理内核。QuotaMate 与 OpenAI、Anthropic、FlClash 无官方隶属或背书关系。
 
-<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.27-alpha/QuotaMate-0.1.27-macos-universal.dmg"><strong>下载 QuotaMate for macOS →</strong></a></p>
+<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.28-alpha/QuotaMate-0.1.28-macos-universal.dmg"><strong>下载 QuotaMate for macOS →</strong></a></p>
