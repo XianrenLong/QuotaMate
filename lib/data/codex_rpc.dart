@@ -17,6 +17,17 @@ class CodexRpc {
     return null;
   }
 
+  static Future<AccountSnapshot> readIdentity(String executable, String root) =>
+      _withClient(
+        executable,
+        root,
+        (request) async => AccountSnapshot.fromRpc(
+          await request('account/read', {'refreshToken': false}),
+          null,
+          observed: DateTime.now(),
+        ),
+      );
+
   static Future<AccountSnapshot> read(
     String executable,
     String root, {

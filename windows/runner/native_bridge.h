@@ -13,6 +13,7 @@ class NativeBridge {
  public:
   NativeBridge(HWND window, flutter::BinaryMessenger* messenger);
   ~NativeBridge();
+  bool TrayAvailable() const { return tray_added_; }
   bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam);
  private:
   void HandleCall(const flutter::MethodCall<flutter::EncodableValue>& call,
@@ -26,6 +27,8 @@ class NativeBridge {
   UINT taskbar_created_;
   bool english_ = false;
   bool tray_added_ = false;
+  bool close_to_tray_ = false;
+  bool quitting_ = false;
   std::string appearance_ = "light";
 };
 #endif

@@ -20,6 +20,8 @@ import 'data/appearance.dart';
 import 'data/provider.dart';
 import 'data/claude_connection.dart';
 import 'data/claude_pricing.dart';
+import 'data/connection_diagnostics.dart';
+import 'data/app_updates.dart';
 
 class AppController extends ChangeNotifier {
   final LocalStore store;
@@ -44,6 +46,15 @@ class AppController extends ChangeNotifier {
       autoRefresh = true,
       notifications = false;
   bool readSubscriptionDates = true;
+  bool closeToTray = false, launchAtLogin = false, startupBusy = false;
+  bool checkingConnection = false, checkingUpdates = false;
+  ConnectionReport? connectionReport;
+  AppUpdate? availableUpdate;
+  String? updateMessage;
+  DateTime? updateCheckedAt;
+  UpdateChannel updateChannel = UpdateChannel.alpha;
+  bool get isWindows => Platform.isWindows;
+
   int page = 0, days = 1, refreshMinutes = 5, threshold = 20;
   String? error, message, executable;
   List<SourceProfile> _allProfiles = [];
@@ -77,6 +88,10 @@ class AppController extends ChangeNotifier {
     autoRefresh = s['autoRefresh'] != false;
     notifications = s['notifications'] == true;
     readSubscriptionDates = s['readSubscriptionDates'] != false;
+    closeToTray = s['closeToTray'] == true;
+    updateChannel = s['updateChannel'] == 'stable'
+        ? UpdateChannel.stable
+        : UpdateChannel.alpha;
     refreshMinutes = (s['refreshMinutes'] as int? ?? 5).clamp(1, 60);
     threshold = (s['threshold'] as int? ?? 20).clamp(1, 99);
     executable = s['executable'];
@@ -318,6 +333,7 @@ class AppController extends ChangeNotifier {
   Future<void> initialize() async {
     await _syncLanguage();
     await _syncAppearance();
+    await _syncWindows();
     await refresh();
     var ticks = 0;
     _timer = Timer.periodic(const Duration(seconds: 30), (_) async {
@@ -335,6 +351,7 @@ class AppController extends ChangeNotifier {
     if (busy) return;
     busy = true;
     if (remote) error = null;
+    connectionReport = null;
     if ((remote || isClaude) && quotaEnabled) accountVerified = false;
     now = DateTime.now();
     _notify();
@@ -527,6 +544,7 @@ class AppController extends ChangeNotifier {
   Future<void> selectProvider(AiProvider value) async {
     if (busy || provider == value) return;
     _selectedByProvider[provider] = selected;
+    connectionReport = null;
     provider = value;
     selected = (_selectedByProvider[value] ?? 0).clamp(0, profiles.length - 1);
     error = null;
@@ -641,6 +659,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> selectProfile(int index) async {
     if (busy) return;
+    connectionReport = null;
     selected = index;
     _selectedByProvider[provider] = index;
     error = null;
@@ -655,13 +674,19 @@ class AppController extends ChangeNotifier {
       'provider': providerLabel,
     });
     if (root == null) return;
-    if ((isClaude && !await Directory(p.join(root, 'projects')).exists()) ||
-        (!isClaude &&
-            !await Directory(p.join(root, 'sessions')).exists() &&
-            !await Directory(p.join(root, 'archived_sessions')).exists())) {
-      message = isClaude
-          ? '这个目录没有 Claude Code 会话记录，请选择包含 projects 的配置目录。'
-          : '这个目录没有 Codex 会话记录，请选择包含 sessions 的配置目录。';
+    final markers = isClaude
+        ? ['projects', 'settings.json', '.claude.json']
+        : ['sessions', 'archived_sessions', 'auth.json', 'config.toml'];
+    var recognized = false;
+    for (final marker in markers) {
+      if (await FileSystemEntity.type(p.join(root, marker)) !=
+          FileSystemEntityType.notFound) {
+        recognized = true;
+        break;
+      }
+    }
+    if (!recognized) {
+      message = '未发现对应配置或会话目录，请选择官方工具使用的配置根目录。';
       _notify();
       return;
     }
@@ -681,6 +706,7 @@ class AppController extends ChangeNotifier {
       'provider': providerLabel,
     });
     if (file != null) {
+      connectionReport = null;
       if (isClaude) {
         claudeExecutable = file;
       } else {
@@ -700,6 +726,8 @@ class AppController extends ChangeNotifier {
       'autoRefresh': autoRefresh,
       'notifications': notifications,
       'readSubscriptionDates': readSubscriptionDates,
+      'closeToTray': closeToTray,
+      'updateChannel': updateChannel.name,
       'refreshMinutes': refreshMinutes,
       'threshold': threshold,
       'executable': executable,
@@ -721,6 +749,120 @@ class AppController extends ChangeNotifier {
     update();
     save();
     _notify();
+  }
+
+  Future<void> runConnectionChecks() async {
+    if (busy || demo || _disposed) return;
+    busy = true;
+    checkingConnection = true;
+    accountVerified = false;
+    connectionReport = null;
+    _notify();
+    try {
+      final result = await ConnectionDiagnostics.run(
+        profile,
+        configured: isClaude ? claudeExecutable : executable,
+      );
+      if (!_disposed && result.scope == profile.scope) {
+        connectionReport = result;
+      }
+    } catch (_) {
+      if (!_disposed) message = '检测暂未完成，请稍后重试。';
+    } finally {
+      busy = false;
+      checkingConnection = false;
+      _notify();
+    }
+  }
+
+  Future<void> checkUpdates({
+    Future<AppUpdate?> Function(UpdateChannel)? fetch,
+  }) async {
+    if (checkingUpdates || _disposed) return;
+    checkingUpdates = true;
+    availableUpdate = null;
+    updateMessage = null;
+    final channel = updateChannel;
+    _notify();
+    try {
+      final result =
+          await (fetch?.call(channel) ?? AppUpdates.check(channel: channel));
+      if (!_disposed && channel == updateChannel) {
+        availableUpdate = result;
+        updateCheckedAt = DateTime.now();
+        updateMessage = result == null ? '未发现更高版本。' : '发现可用更新。';
+      }
+    } catch (failure) {
+      if (!_disposed) {
+        updateMessage =
+            failure is UpdateCheckFailure && failure.code == 'rateLimit'
+            ? '更新服务请求较多，请稍后重试。'
+            : '无法检查更新，请检查网络或打开版本页面。';
+      }
+    } finally {
+      checkingUpdates = false;
+      _notify();
+    }
+  }
+
+  void setUpdateChannel(UpdateChannel channel) {
+    if (checkingUpdates) return;
+    updateChannel = channel;
+    availableUpdate = null;
+    updateMessage = null;
+    updateCheckedAt = null;
+    save();
+    _notify();
+  }
+
+  Future<void> _syncWindows() async {
+    if (!isWindows) return;
+    try {
+      final enabled = await NativeBridge.call<bool>('setWindowBehavior', {
+        'closeToTray': closeToTray,
+      });
+      if (closeToTray && enabled != true) closeToTray = false;
+      launchAtLogin =
+          await NativeBridge.call<bool>('getLaunchAtLogin') ?? false;
+    } catch (_) {
+      /* Optional system integration must not block startup. */
+    }
+    _notify();
+  }
+
+  Future<void> setCloseToTray(bool enabled) async {
+    if (!isWindows || startupBusy) return;
+    try {
+      final accepted = await NativeBridge.call<bool>('setWindowBehavior', {
+        'closeToTray': enabled,
+      });
+      if (accepted != true) throw StateError('Tray unavailable');
+      closeToTray = enabled;
+      save();
+    } catch (_) {
+      message = '系统托盘暂不可用，关闭窗口仍会退出。';
+    }
+    _notify();
+  }
+
+  Future<void> setLaunchAtLogin(bool enabled) async {
+    if (!isWindows || startupBusy) return;
+    startupBusy = true;
+    _notify();
+    try {
+      final accepted = await NativeBridge.call<bool>('setLaunchAtLogin', {
+        'enabled': enabled,
+      });
+      if (accepted != true) {
+        throw StateError('Startup registration unavailable');
+      }
+      launchAtLogin = enabled;
+    } catch (_) {
+      message = '未能修改开机启动，请检查系统设置；原设置已保留。';
+    } finally {
+      startupBusy = false;
+      _notify();
+    }
   }
 
   Future<void> setSubscriptionDateReading(bool enabled) async {
@@ -868,6 +1010,8 @@ class AppController extends ChangeNotifier {
     'scanEnabled': scanEnabled,
     'quotaEnabled': quotaEnabled,
     'lastSyncFailed': error != null,
+    if (connectionReport != null && connectionReport!.scope == profile.scope)
+      'connectionCheck': connectionReport!.safeSummary,
   });
   @override
   void dispose() {

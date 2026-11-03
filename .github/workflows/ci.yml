@@ -89,6 +89,11 @@ jobs:
           python scripts/test_claude_statusline.py build/windows-dependencies/quotamate-claude-statusline.exe
       - name: Build Windows application and packages
         run: ./scripts/package_windows.ps1
+      - name: Test Windows startup registration
+        run: |
+          cmake --build build/windows/x64 --config Release --target quotamate_windows_startup_test
+          ./build/windows/x64/tests/quotamate_windows_startup_test.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Native startup test failed' }
       - name: Smoke test packaged application
         run: ./scripts/test_windows_package.ps1
       - name: Upload Windows test packages

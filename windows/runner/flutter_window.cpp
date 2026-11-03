@@ -4,8 +4,8 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
-FlutterWindow::FlutterWindow(const flutter::DartProject& project)
-    : project_(project) {}
+FlutterWindow::FlutterWindow(const flutter::DartProject& project, bool background)
+    : project_(project), background_(background) {}
 
 FlutterWindow::~FlutterWindow() {}
 
@@ -29,7 +29,7 @@ bool FlutterWindow::OnCreate() {
   native_bridge_ = std::make_unique<NativeBridge>(GetHandle(), flutter_controller_->engine()->messenger());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
+    if (!background_ || !native_bridge_->TrayAvailable()) this->Show();
   });
 
   // Flutter can complete the first frame before the "show window" callback is
