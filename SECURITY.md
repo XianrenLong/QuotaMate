@@ -2,7 +2,7 @@
 
 ## 支持范围
 
-当前维护最新 macOS Alpha 版本。软件尚未完成独立安全审计，开源不等于获得模型服务商授权，也不构成账号安全保证。Windows 暂无可用发行版。
+当前维护最新 macOS / Windows x64 Alpha 版本。软件尚未完成独立安全审计，开源不等于获得模型服务商授权，也不构成账号安全保证。Windows Alpha 暂无 Authenticode 发布者签名。
 
 ## 报告漏洞
 
@@ -31,3 +31,5 @@ JWT 的 `exp` / `iat`、登录时间、额度恢复日和重置权益有效期�
 项目没有自己的云端服务或遥测端点。用户主动查询 GPT 额度时，官方 CLI 可能访问服务商；「本地优先」并不表示官方工具完全离线。详见 [数据来源](docs/data-sources.md) 和 [Claude 连接说明](docs/claude-connection.md)。
 
 当前下载包仅使用本地 ad-hoc 开发签名，未经过 Apple 公证。不要把它描述为 Apple 或模型服务商认证的发行版。
+
+Windows 本机数据位于 `%APPDATA%\QuotaMate`；应用数据、临时登录脚本和 Claude 采集目录设置当前用户 / SYSTEM 访问权限。Windows 采集器仍为本地被动模式，不自动接入 WSL，不引入额外订阅轮询。安装程序不删除个人数据库或原工具设置；卸载前可关闭状态栏采集以恢复原配置。

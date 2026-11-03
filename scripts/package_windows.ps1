@@ -31,13 +31,14 @@ try {
     New-Item -ItemType Directory -Force dist/windows | Out-Null
     $zip = Join-Path $projectDirectory "dist/windows/QuotaMate-$version-windows-x64.zip"
     Compress-Archive -Path "$release/*" -DestinationPath $zip -Force
-    $iscc = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+    $isccCommand = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+    $iscc = if ($isccCommand) { $isccCommand.Source } else { $null }
     if (-not $iscc) {
         $innoPath = "${env:ProgramFiles(x86)}/Inno Setup 6/ISCC.exe"
-        if (Test-Path $innoPath) { $iscc = Get-Item $innoPath }
+        if (Test-Path $innoPath) { $iscc = $innoPath }
     }
     if (-not $iscc) { throw 'Install Inno Setup 6 to build the installer' }
-    & $iscc.FullName "/DAppVersion=$version" "/DReleaseDirectory=$release" scripts/windows_installer.iss
+    & $iscc "/DAppVersion=$version" "/DReleaseDirectory=$release" scripts/windows_installer.iss
     if ($LASTEXITCODE -ne 0) { throw 'Windows installer build failed' }
     $names = @("QuotaMate-$version-windows-x64.zip", "QuotaMate-$version-windows-x64-setup.exe")
     $lines = foreach ($name in $names) {

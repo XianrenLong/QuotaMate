@@ -55,6 +55,6 @@ SQLite 数据库只保存时间、项目路径、会话标识、模型和 token 
 
 ## 隐私与存储
 
-数据位于 `~/Library/Application Support/QuotaMate/usage.sqlite3`。数据库包含本机项目路径和用于显示的账号信息，应按个人数据保护。应用不包含云端服务、遥测和浏览器 Cookie 扫描。导出只包含统计字段，项目使用目录名，未包含凭证或对话正文；CSV 文本单元格做公式前缀处理。
+macOS 数据位于 `~/Library/Application Support/QuotaMate/usage.sqlite3`；Windows 位于 `%APPDATA%\QuotaMate\usage.sqlite3`。数据库包含本机项目路径和用于显示的账号信息，应按个人数据保护。应用不包含云端服务、遥测和浏览器 Cookie 扫描。导出只包含统计字段，项目使用目录名，未包含凭证或对话正文；CSV 文本单元格做公式前缀处理。
 
 macOS 程序采用桌面分发配置，读取用户可访问的日志目录和调用本机 CLI，因此未启用 App Sandbox。开发工具调试权限不代表生产版公证状态。正式公开分发还需要独立的开发者签名、公证、发布流程和安全审查。

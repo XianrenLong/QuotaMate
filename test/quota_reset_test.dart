@@ -93,7 +93,7 @@ void main() {
   );
   setUp(() {
     dir = Directory.systemTemp.createTempSync('quota-reset-');
-    executable = '${dir.path}/mock-codex';
+    executable = '${dir.path}/mock-codex${Platform.isWindows ? '.exe' : ''}';
     File(executable).writeAsStringSync('mock executable; never launched');
     store = LocalStore('${dir.path}/data.db');
     store.set('preferences', {
@@ -106,6 +106,7 @@ void main() {
     store.set('quota:${dir.path}', snapshot(1).toJson());
   });
   tearDown(() {
+    store.close();
     dir.deleteSync(recursive: true);
   });
   test(
@@ -166,7 +167,10 @@ void main() {
       )..accountVerified = true;
       addTearDown(c.dispose);
       final pending = c.resetQuota();
-      await Future<void>.delayed(Duration.zero);
+      await Future.doWhile(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+        return sent == 0 && c.busy;
+      }).timeout(const Duration(seconds: 5));
       expect(c.resettingQuota, true);
       expect(c.canResetQuota, false);
       await c.resetQuota();

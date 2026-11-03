@@ -359,7 +359,9 @@ class _AppShellState extends State<AppShell> {
                                     IconButton.filledTonal(
                                       tooltip: AppLocale.text(
                                         context,
-                                        '刷新额度（⌘R）',
+                                        Platform.isMacOS
+                                            ? '刷新额度（⌘R）'
+                                            : '刷新额度（Ctrl+R）',
                                       ),
                                       onPressed: c.busy
                                           ? null

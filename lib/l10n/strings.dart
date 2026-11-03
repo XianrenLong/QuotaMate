@@ -192,7 +192,8 @@ const _english = <String, String>{
       'The Claude status line changed. Current settings were not overwritten.',
   '未能配置额度采集。请先登录 Claude Code，确认配置可写；原设置已保留。': 'Could not configure collection. Sign in to Claude Code and check configuration permissions. Original settings are kept.',
   '这个目录没有 Claude Code 会话记录，请选择包含 projects 的配置目录。': 'No Claude Code session logs in this folder. Choose a configuration folder containing projects.',
-  '本地优先 · GPT / Claude · macOS': 'Local first · GPT / Claude · macOS',
+  '本地优先 · GPT / Claude · macOS / Windows':
+      'Local first · GPT / Claude · macOS / Windows',
   '原始日志会保留。已从磁盘删除的历史日志无法重新导入。': 'Original logs are kept. Logs already deleted from disk cannot be reimported.',
   '其中缓存写入': 'Cache writes',
   '{provider} 演示': '{provider} Demo',
@@ -220,6 +221,7 @@ const _english = <String, String>{
   '切换显示平台': 'Display provider',
   'Claude · 后续接入': 'Claude · Coming soon',
   '全部平台 · 后续接入': 'All providers · Coming soon',
+  '刷新额度（Ctrl+R）': 'Refresh limits (Ctrl+R)',
   '刷新额度（⌘R）': 'Refresh limits (⌘R)',
   '查看设置': 'Open settings',
   '退出演示，读取真实数据': 'Exit demo and load real data',
@@ -352,8 +354,7 @@ const _english = <String, String>{
   'API 等价估算，不代表实际扣费。': 'Reference API estimate, not actual charges.',
   '额度提醒': 'Limit alerts',
   '低额度通知': 'Low-limit notifications',
-  '额度低于阈值时，通过 macOS 通知提醒。':
-      'Notify through macOS when remaining usage falls below the threshold.',
+  '额度低于阈值时，通过系统通知提醒。': 'Notify through the system when remaining usage falls below the threshold.',
   '剩余额度阈值': 'Remaining threshold',
   '当前窗口和较长窗口分别判断。': 'Current and longer windows are checked separately.',
   '同一额度窗口只提醒一次。演示数据和过期快照不会触发通知。': 'One alert per limit window. Demo data and expired snapshots do not trigger notifications.',

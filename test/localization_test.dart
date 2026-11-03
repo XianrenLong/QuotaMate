@@ -136,7 +136,10 @@ void main() {
         c.navigate(4);
         await tester.pumpWidget(QuotaMateApp(controller: c));
         await tester.pumpAndSettle();
-        expect(find.text('QuotaMate'), findsOneWidget);
+        expect(
+          tester.widget<MaterialApp>(find.byType(MaterialApp)).title,
+          'QuotaMate',
+        );
         expect(find.text('额度管家'), findsNothing);
         await tester.tap(find.text('English'));
         await tester.pumpAndSettle();

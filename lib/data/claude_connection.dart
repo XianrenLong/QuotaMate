@@ -121,9 +121,7 @@ class ClaudeConnection {
   ) async {
     final directory = Directory(p.join(supportDirectory, 'claude-login'));
     await directory.create(recursive: true);
-    if (!Platform.isWindows) {
-      await Process.run('chmod', ['700', directory.path]);
-    }
+    await DesktopPlatform.protectDirectory(directory);
     final file = File(
       p.join(
         directory.path,
@@ -411,10 +409,7 @@ class ClaudeConnection {
     }
     final private = Directory(p.join(root, 'quotamate'));
     await private.create(recursive: true);
-    if (!Platform.isWindows &&
-        (await Process.run('chmod', ['700', private.path])).exitCode != 0) {
-      throw StateError('Claude configuration permissions unavailable');
-    }
+    await DesktopPlatform.protectDirectory(private);
     final installed = p.join(
       private.path,
       'quotamate-claude-statusline${Platform.isWindows ? '.exe' : ''}',
@@ -430,10 +425,9 @@ class ClaudeConnection {
     final previous = settings['statusLine'];
     final isOurs =
         previous is Map &&
-        (previous['quotamateRelay'] == true ||
-            (previous['command'] as String? ?? '').contains(
-              'quotamate-claude-statusline',
-            ));
+        (previous['command'] as String? ?? '').contains(
+          'quotamate-claude-statusline',
+        );
     if (!isOurs) {
       await _atomic(File(p.join(private.path, 'original-statusline.json')), {
         'present': settings.containsKey('statusLine'),
@@ -462,10 +456,9 @@ class ClaudeConnection {
     final settings = await readJson(file.path);
     final current = settings['statusLine'];
     if (current is! Map ||
-        !(current['quotamateRelay'] == true ||
-            (current['command'] as String? ?? '').contains(
-              'quotamate-claude-statusline',
-            ))) {
+        !(current['command'] as String? ?? '').contains(
+          'quotamate-claude-statusline',
+        )) {
       return false;
     }
     final private = Directory(p.join(root, 'quotamate'));

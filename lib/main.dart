@@ -17,6 +17,7 @@ Future<void> main() async {
       'QuotaMate': 'LICENSE',
       'CC Switch (timing reference)': 'docs/cc-switch-LICENSE.txt',
       'Lucide / Feather': 'docs/licenses/lucide.txt',
+      'SQLite engine (Windows)': 'docs/licenses/sqlite-engine.txt',
     }.entries) {
       yield LicenseEntryWithLineBreaks([
         entry.key,
@@ -25,7 +26,7 @@ Future<void> main() async {
   });
   final directory = Directory(DesktopPlatform().supportDirectory);
   await directory.create(recursive: true);
-  if (!Platform.isWindows) await Process.run('chmod', ['700', directory.path]);
+  await DesktopPlatform.protectDirectory(directory);
   final store = LocalStore(p.join(directory.path, 'usage.sqlite3'));
   final controller = AppController(
     store,

@@ -106,6 +106,42 @@ class DesktopPlatform {
 
   static String powershellQuote(String value) =>
       "'${value.replaceAll("'", "''")}'";
+
+  static Future<void> protectDirectory(Directory directory) async {
+    if (!Platform.isWindows) {
+      if ((await Process.run('chmod', ['700', directory.path])).exitCode != 0) {
+        throw FileSystemException('Unable to protect local metadata directory');
+      }
+      return;
+    }
+    final system = p.join(
+      Platform.environment['SystemRoot'] ?? r'C:\Windows',
+      'System32',
+    );
+    final user = await Process.run(p.join(system, 'whoami.exe'), [
+      '/user',
+      '/fo',
+      'csv',
+      '/nh',
+    ]);
+    final sid = RegExp(r'S-1-(?:\d+-)*\d+')
+        .firstMatch('${user.stdout}')
+        ?.group(0);
+    if (user.exitCode != 0 || sid == null) {
+      throw FileSystemException('Unable to identify local metadata owner');
+    }
+    final permissions = await Process.run(p.join(system, 'icacls.exe'), [
+      directory.path,
+      '/inheritance:r',
+      '/grant:r',
+      '*$sid:(OI)(CI)F',
+      '*S-1-5-18:(OI)(CI)F',
+    ]);
+    if (permissions.exitCode != 0) {
+      throw FileSystemException('Unable to protect local metadata directory');
+    }
+  }
+
   static String encodedPowerShell(String script) => base64Encode([
     for (final unit in script.codeUnits) ...[unit & 255, unit >> 8],
   ]);

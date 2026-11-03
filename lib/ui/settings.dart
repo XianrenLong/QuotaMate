@@ -29,7 +29,7 @@ class AlertsPage extends StatelessWidget {
               SizedBox(height: 20),
               settingRow(
                 '低额度通知',
-                '额度低于阈值时，通过 macOS 通知提醒。',
+                '额度低于阈值时，通过系统通知提醒。',
                 trailing: Toggle(c.notifications, (v) => c.setNotifications(v)),
               ),
               Divider(height: 28),
@@ -515,7 +515,7 @@ class SettingsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 5),
                     label(
-                      '本地优先 · GPT / Claude · macOS',
+                      '本地优先 · GPT / Claude · macOS / Windows',
                       size: 12,
                       color: themeColor(context, C.muted),
                     ),

@@ -67,6 +67,7 @@ flutter:
     - LICENSE
     - docs/cc-switch-LICENSE.txt
     - docs/licenses/lucide.txt
+    - docs/licenses/sqlite-engine.txt
     - assets/branding/quotamate-hourglass.png
     - assets/branding/account-card-soft-curve.png
     - assets/branding/account-card-soft-curve-dark.png

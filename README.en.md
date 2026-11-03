@@ -1,14 +1,14 @@
 <p align="center"><img src="assets/branding/quotamate-hourglass.png" width="96" height="96" alt="QuotaMate hourglass"></p>
 <h1 align="center">QuotaMate</h1>
 <p align="center"><strong>Your local AI usage, clearly.</strong></p>
-<p align="center">A macOS dashboard for GPT / Codex and Claude Code usage, cache, and reference costs.</p>
+<p align="center">A macOS and Windows dashboard for GPT / Codex and Claude Code usage, cache, and reference costs.</p>
 <p align="center">
   <a href="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/version-0.1.24%20Alpha-3b82f6?style=flat-square" alt="0.1.24 Alpha">
+  <img src="https://img.shields.io/badge/version-0.1.25%20Alpha-3b82f6?style=flat-square" alt="0.1.25 Alpha">
   <img src="https://img.shields.io/badge/macOS-12%2B-334155?style=flat-square" alt="macOS 12+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
 </p>
-<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="Download the universal macOS DMG"></a></p>
+<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="Download the universal macOS DMG"></a></p>
 <p align="center"><a href="#download">Download</a> · <a href="#first-run">First run</a> · <a href="#connect-gpt">GPT / Codex</a> · <a href="#connect-claude">Claude</a> · <a href="#faq">FAQ</a> · <a href="README.md">简体中文</a></p>
 
 ![Claude statistics with synthetic seven-day data](screenshots/preview/statistics-claude-dark-en.png)
@@ -28,14 +28,21 @@ All previews use production Flutter components with synthetic accounts, fictiona
 
 ## Download and install
 
-**v0.1.24 Alpha · macOS 12+ · one universal package for Apple Silicon and Intel.** The original Codex / Claude tools may have higher system requirements.
+**v0.1.25 Alpha · macOS 12+ universal / Windows x64.** The original Codex / Claude tools may have higher system requirements.
 
 | Package | Use | Direct link |
 | --- | --- | --- |
-| **DMG** · approximately 27.7 MB | Recommended for most users | **[Download DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.dmg)** |
-| ZIP · approximately 24.7 MB | Extract and move the app manually | [Download ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/QuotaMate-0.1.24-macos-universal.zip) |
-| SHA256 checksums | Verify file consistency | [Download SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.24-alpha/SHA256SUMS) |
-| Release notes | Changes and limitations | [View release](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.24-alpha) |
+| **Windows x64 installer** | Install for the current user | **[Download EXE](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-windows-x64-setup.exe)** |
+| Windows x64 portable ZIP | Extract the complete folder, then run quota_mate.exe | [Download ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-windows-x64.zip) |
+| Windows SHA256 | Verify Windows downloads | [Checksums](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/SHA256SUMS-windows) |
+| **DMG** | Recommended for most users | **[Download DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-macos-universal.dmg)** |
+| ZIP | Extract and move the app manually | [Download ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-macos-universal.zip) |
+| SHA256 checksums | Verify file consistency | [Download SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/SHA256SUMS) |
+| Release notes | Changes and limitations | [View release](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.25-alpha) |
+
+**Windows:** use the installer, or extract the complete ZIP and run `quota_mate.exe`. Native Windows clients are the first target; WSL is separate. [Windows guide](docs/windows.md).
+
+**macOS:**
 
 1. Download and open the DMG.
 2. Drag **QuotaMate** into **Applications**.
@@ -43,7 +50,7 @@ All previews use production Flutter components with synthetic accounts, fictiona
 4. Select your provider and follow the connection steps below.
 
 > [!NOTE]
-> This is an ad-hoc signed **Alpha development build**, not Apple Developer ID signed or notarized. If macOS cannot verify the developer, verify the source and integrity first. If you trust the app and choose to proceed, follow [Apple's official instructions](https://support.apple.com/en-us/102445) for **System Settings → Privacy & Security → Open Anyway** after trying to open it. Do not treat malware or damaged-file alerts as ordinary developer warnings. Windows and Linux releases are not available.
+> This is an ad-hoc signed **Alpha development build**, not Apple Developer ID signed or notarized. If macOS cannot verify the developer, verify the source and integrity first. If you trust the app and choose to proceed, follow [Apple's official instructions](https://support.apple.com/en-us/102445) for **System Settings → Privacy & Security → Open Anyway** after trying to open it. Do not treat malware or damaged-file alerts as ordinary developer warnings. Windows x64 is an unsigned Alpha; Linux releases are not available. See the [Windows guide](docs/windows.md).
 
 No Flutter, Python, or API key is needed to install QuotaMate. Install the original Codex / Claude Code tools separately. A checksum checks consistency, not notarization or safety.
 

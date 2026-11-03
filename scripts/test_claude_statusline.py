@@ -50,7 +50,7 @@ class StatusLineRelayTest(unittest.TestCase):
     def test_preserves_existing_status_line_output_even_when_it_ignores_input(self):
         private = self.root / 'quotamate'
         private.mkdir(mode=0o700)
-        (private / 'original-statusline.json').write_text(json.dumps({'statusLine': {'command': "[Console]::Write('original-output')" if os.name == 'nt' else 'printf original-output'}}))
+        (private / 'original-statusline.json').write_text(json.dumps({'statusLine': {'command': 'powershell.exe -NoLogo -NoProfile -Command "[Console]::Write(\'original-output\')"' if os.name == 'nt' else 'printf original-output'}}))
         result = self.run_relay(data={**self.input, 'ignored': 'x' * 50000})
         self.assertEqual(result.stdout, 'original-output')
 

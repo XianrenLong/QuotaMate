@@ -53,8 +53,9 @@ void main() {
           availableQuotaResets: 3,
         ).toJson(),
       );
-      final executable = File('${dir.path}/mock-codex')
-        ..writeAsStringSync('mock');
+      final executable = File(
+        '${dir.path}/mock-codex${Platform.isWindows ? '.exe' : ''}',
+      )..writeAsStringSync('mock');
       var resetCalls = 0;
       final c = AppController(
         store,

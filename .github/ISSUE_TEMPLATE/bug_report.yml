@@ -17,8 +17,8 @@ body:
   - type: input
     id: system
     attributes:
-      label: macOS 版本与芯片
-      placeholder: macOS 15 / Apple Silicon
+      label: 系统版本与架构
+      placeholder: Windows 11 / x64 或 macOS 15 / Apple Silicon
     validations:
       required: true
   - type: dropdown

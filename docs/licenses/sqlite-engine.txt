@@ -1,0 +1,12 @@
+SQLite engine 3.54.1 (Windows x64 distribution)
+Source: https://www.sqlite.org/2026/sqlite-dll-win-x64-3540100.zip
+License / public domain dedication: https://www.sqlite.org/copyright.html
+
+All of the code and documentation in SQLite has been dedicated to the public
+domain by the authors. All code authors, and representatives of the companies
+they work for, have signed affidavits dedicating their contributions to the
+public domain and originals of those signed affidavits are stored in a fire
+safe at the main offices of Hwaci.
+
+This notice identifies the bundled Windows SQLite engine. The Dart sqlite3
+binding has its own MIT license in sqlite3.txt.

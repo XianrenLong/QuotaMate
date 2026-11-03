@@ -1,6 +1,6 @@
 # 参与贡献
 
-欢迎提交问题、文档改进和 Pull Request。当前版本为 macOS Alpha，Windows 原生连接和打包尚未完成。
+欢迎提交问题、文档改进和 Pull Request。当前提供 macOS 与 Windows x64 Alpha；Windows 的构建、测试和兼容范围见 [Windows 指南](docs/windows.md)。
 
 ## 本机开发
 
