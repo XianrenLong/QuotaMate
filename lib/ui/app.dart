@@ -231,28 +231,107 @@ class _AppShellState extends State<AppShell> {
                               ),
                             Spacer(),
                             Padding(
-                              padding: EdgeInsets.fromLTRB(22, 0, 12, 25),
-                              child: InkWell(
-                                onTap: () => c.navigate(4),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      LucideIcons.hardDrive,
-                                      size: 18,
-                                      color: themeColor(context, C.muted),
-                                    ),
-                                    if (!collapsed) ...[
-                                      SizedBox(width: 12),
-                                      Expanded(
-                                        child: label(
-                                          '本地保存',
-                                          size: 12,
-                                          color: themeColor(context, C.muted),
-                                        ),
+                              padding: EdgeInsets.fromLTRB(
+                                collapsed ? 4 : 18,
+                                0,
+                                collapsed ? 4 : 10,
+                                20,
+                              ),
+                              child: LayoutBuilder(
+                                builder: (context, box) {
+                                  final compact =
+                                      collapsed || box.maxWidth < 135;
+                                  final storage = InkWell(
+                                    onTap: () => c.navigate(4),
+                                    child: SizedBox(
+                                      height: 36,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            LucideIcons.hardDrive,
+                                            size: 18,
+                                            color: themeColor(context, C.muted),
+                                          ),
+                                          if (!compact) ...[
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: label(
+                                                '本地保存',
+                                                size: 12,
+                                                color: themeColor(
+                                                  context,
+                                                  C.muted,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
+                                    ),
+                                  );
+                                  final update = c.availableUpdate;
+                                  final download = update == null
+                                      ? null
+                                      : Tooltip(
+                                          message:
+                                              '${c.strings.text("下载更新")} ${update.tag}',
+                                          child: SizedBox(
+                                            width: compact ? 34 : 62,
+                                            height: 34,
+                                            child: TextButton(
+                                              key: const ValueKey(
+                                                'sidebar-update',
+                                              ),
+                                              onPressed: () =>
+                                                  NativeBridge.call('openUrl', {
+                                                    'url':
+                                                        (update.download ??
+                                                                update.page)
+                                                            .toString(),
+                                                  }),
+                                              style: TextButton.styleFrom(
+                                                backgroundColor: themeColor(
+                                                  context,
+                                                  C.blue,
+                                                ).withValues(alpha: .12),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 5,
+                                                    ),
+                                              ),
+                                              child: FittedBox(
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(
+                                                      LucideIcons.download,
+                                                      size: 15,
+                                                    ),
+                                                    if (!compact) ...[
+                                                      const SizedBox(width: 3),
+                                                      const LocalizedText('更新'),
+                                                    ],
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                  if (compact)
+                                    return Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [storage, ?download],
+                                    );
+                                  return Row(
+                                    children: [
+                                      Expanded(child: storage),
+                                      ?download,
                                     ],
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
                             ),
                           ],

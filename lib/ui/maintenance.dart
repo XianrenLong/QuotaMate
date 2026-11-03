@@ -280,8 +280,15 @@ class UpdatesPanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: label('自动检查更新')),
+            Toggle(c.automaticUpdateChecks, c.setAutomaticUpdateChecks),
+          ],
+        ),
+        const SizedBox(height: 8),
         label(
-          '仅在点击时访问 GitHub 获取版本信息，不发送账号、目录或用量。',
+          '启动时及运行期间每 6 小时检查 GitHub 版本。有新版本时，侧栏左下角显示下载按钮。',
           size: 12,
           color: themeColor(context, C.muted),
           lines: 3,

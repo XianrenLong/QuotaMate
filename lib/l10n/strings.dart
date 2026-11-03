@@ -618,4 +618,7 @@ const _english = <String, String>{
   "最近导入记录：{date}": "Latest imported record: {date}",
   "桌面 Code 请核对会话环境。本机使用所选配置目录，SSH 和云端会话需在对应运行环境核对日志。": "Check the Desktop Code session environment. Local uses the selected configuration folder. For SSH and cloud sessions, check logs in the environment where the session ran.",
   "额度采集时间": "Limit capture time",
+  '自动检查更新': 'Automatically check for updates',
+  '启动时及运行期间每 6 小时检查 GitHub 版本。有新版本时，侧栏左下角显示下载按钮。': 'Checks GitHub at launch and every six hours while running. A download button appears at the bottom of the sidebar when an update is available.',
+  '更新': 'Update',
 };

@@ -989,9 +989,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
   Widget _claudeTabs(AppController c) => Row(
     children: [
       Segments(
-        ['账户额度', 'Token 与成本'],
-        c.claudeQuotaTab ? 0 : 1,
-        (i) => c.selectClaudeStatistics(i == 0),
+        ['Token 与成本', '账户额度'],
+        c.claudeQuotaTab ? 1 : 0,
+        (i) => c.selectClaudeStatistics(i == 1),
       ),
       const Spacer(),
       if (!c.claudeQuotaTab && c.events.isEmpty && c.latestUsageDate != null)

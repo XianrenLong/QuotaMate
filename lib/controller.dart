@@ -48,6 +48,8 @@ class AppController extends ChangeNotifier {
   bool readSubscriptionDates = true;
   bool closeToTray = false, launchAtLogin = false, startupBusy = false;
   bool checkingConnection = false, checkingUpdates = false;
+  bool automaticUpdateChecks = true;
+  DateTime? _lastVersionAttempt;
   ConnectionReport? connectionReport;
   AppUpdate? availableUpdate;
   String? updateMessage;
@@ -89,6 +91,7 @@ class AppController extends ChangeNotifier {
     notifications = s['notifications'] == true;
     readSubscriptionDates = s['readSubscriptionDates'] != false;
     closeToTray = s['closeToTray'] == true;
+    automaticUpdateChecks = s['automaticUpdateChecks'] != false;
     updateChannel = s['updateChannel'] == 'stable'
         ? UpdateChannel.stable
         : UpdateChannel.alpha;
@@ -401,6 +404,7 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> initialize() async {
+    unawaited(checkForBackgroundUpdate());
     await _syncLanguage();
     await _syncAppearance();
     await _syncWindows();
@@ -409,6 +413,7 @@ class AppController extends ChangeNotifier {
     _timer = Timer.periodic(const Duration(seconds: 30), (_) async {
       now = DateTime.now();
       ticks++;
+      unawaited(checkForBackgroundUpdate());
       _notify();
       if (!autoRefresh || demo || busy) return;
       if (ticks % 2 == 0) {
@@ -804,6 +809,7 @@ class AppController extends ChangeNotifier {
       'readSubscriptionDates': readSubscriptionDates,
       'closeToTray': closeToTray,
       'updateChannel': updateChannel.name,
+      'automaticUpdateChecks': automaticUpdateChecks,
       'refreshMinutes': refreshMinutes,
       'threshold': threshold,
       'executable': executable,
@@ -862,25 +868,45 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  Future<void> checkForBackgroundUpdate({
+    Future<AppUpdate?> Function(UpdateChannel)? fetch,
+  }) async {
+    if (!automaticUpdateChecks || demo || _disposed || checkingUpdates) return;
+    final last = _lastVersionAttempt;
+    if (last != null &&
+        DateTime.now().difference(last) < const Duration(hours: 6)) {
+      return;
+    }
+    await checkUpdates(fetch: fetch, quiet: true);
+  }
+
+  void setAutomaticUpdateChecks(bool enabled) {
+    setting(() => automaticUpdateChecks = enabled);
+    if (enabled) unawaited(checkForBackgroundUpdate());
+  }
+
   Future<void> checkUpdates({
     Future<AppUpdate?> Function(UpdateChannel)? fetch,
+    bool quiet = false,
   }) async {
     if (checkingUpdates || _disposed) return;
     checkingUpdates = true;
-    availableUpdate = null;
+    _lastVersionAttempt = DateTime.now();
     updateMessage = null;
     final channel = updateChannel;
     _notify();
     try {
       final result =
           await (fetch?.call(channel) ?? AppUpdates.check(channel: channel));
-      if (!_disposed && channel == updateChannel) {
+      if (!_disposed &&
+          channel == updateChannel &&
+          (!quiet || automaticUpdateChecks)) {
         availableUpdate = result;
         updateCheckedAt = DateTime.now();
         updateMessage = result == null ? '未发现更高版本。' : '发现可用更新。';
       }
     } catch (failure) {
-      if (!_disposed) {
+      if (!_disposed && !quiet) {
         updateMessage =
             failure is UpdateCheckFailure && failure.code == 'rateLimit'
             ? '更新服务请求较多，请稍后重试。'
@@ -895,6 +921,7 @@ class AppController extends ChangeNotifier {
   void setUpdateChannel(UpdateChannel channel) {
     if (checkingUpdates) return;
     updateChannel = channel;
+    _lastVersionAttempt = null;
     availableUpdate = null;
     updateMessage = null;
     updateCheckedAt = null;

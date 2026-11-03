@@ -514,4 +514,63 @@ void main() {
       CheckState.warning,
     );
   });
+  testWidgets(
+    'background checks reveal an actionable sidebar update and keep a confirmed release on failure',
+    (tester) async {
+      final dir = Directory.systemTemp.createTempSync('quota-sidebar-');
+      final c = AppController(LocalStore(p.join(dir.path, 'test.db')));
+      addTearDown(() {
+        c.dispose();
+        dir.deleteSync(recursive: true);
+      });
+      tester.view.physicalSize = const Size(1000, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final page = Uri.parse(
+        'https://github.com/${AppUpdates.repository}/releases/tag/v0.2.0',
+      );
+      final update = AppUpdate('v0.2.0', 'notes', page, null, false);
+      final button = find.byKey(const ValueKey('sidebar-update'));
+      await tester.pumpWidget(QuotaMateApp(controller: c));
+      await tester.pumpAndSettle();
+      expect(button, findsNothing);
+      var calls = 0;
+      Future<AppUpdate?> fetch(UpdateChannel channel) async {
+        calls++;
+        return update;
+      }
+
+      await c.checkForBackgroundUpdate(fetch: fetch);
+      await c.checkForBackgroundUpdate(fetch: fetch);
+      await tester.pumpAndSettle();
+      expect(calls, 1);
+      expect(button, findsOneWidget);
+      await c.checkUpdates(
+        fetch: (_) async => throw const UpdateCheckFailure('network'),
+      );
+      await tester.pumpAndSettle();
+      expect(button, findsOneWidget);
+      String? opened;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(NativeBridge.channel, (m) async {
+            if (m.method == 'openUrl') opened = m.arguments['url'];
+            return null;
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(NativeBridge.channel, null),
+      );
+      await tester.tap(button);
+      await tester.pump();
+      expect(opened, page.toString());
+      c.setAutomaticUpdateChecks(false);
+      c.setUpdateChannel(UpdateChannel.stable);
+      await c.checkForBackgroundUpdate(fetch: fetch);
+      await tester.pumpAndSettle();
+      expect(calls, 1);
+      expect(button, findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
