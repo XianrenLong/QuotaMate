@@ -22,8 +22,20 @@ try {
         if ($appProcess.MainWindowHandle -ne 0 -and $appProcess.MainWindowTitle -eq 'QuotaMate') { $ready = $true; break }
     }
     if (-not $ready) { throw 'Packaged application did not create its window' }
-    if (-not (Test-Path "$env:APPDATA/QuotaMate/usage.sqlite3")) { throw 'Database was not created' }
-    Write-Host 'Extracted Windows package starts with an isolated profile and creates its native window.'
+    python -c "import sqlite3,json,os; c=sqlite3.connect(os.path.join(os.environ['APPDATA'],'QuotaMate','usage.sqlite3')); assert c.execute('PRAGMA user_version').fetchone()[0]==3; p=json.loads(c.execute('SELECT value FROM settings WHERE key=?',('preferences',)).fetchone()[0]); assert len(p['prices'])==25; c.close()"
+    if ($LASTEXITCODE -ne 0) { throw 'Application database migration/default pricing check failed' }
+    Stop-Process -Id $appProcess.Id -Force
+    $appProcess.WaitForExit()
+    $appProcess = $null
+    $installer = Get-ChildItem "$projectDirectory/dist/windows/QuotaMate-*-windows-x64-setup.exe" |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    $installation = Join-Path $temporary 'installed application'
+    $setup = Start-Process -FilePath $installer.FullName -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/DIR=`"$installation`"") -Wait -PassThru
+    if ($setup.ExitCode -ne 0 -or -not (Test-Path "$installation/quota_mate.exe")) { throw 'Installer smoke test failed' }
+    $uninstall = Start-Process -FilePath "$installation/unins000.exe" -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
+    if ($uninstall.ExitCode -ne 0) { throw 'Uninstaller smoke test failed' }
+    if (-not (Test-Path "$env:APPDATA/QuotaMate/usage.sqlite3")) { throw 'Uninstall unexpectedly deleted user data' }
+    Write-Host 'Portable package starts, initializes SQLite/default prices, and installer/uninstaller preserve user data.'
 } finally {
     if ($appProcess -and -not $appProcess.HasExited) { Stop-Process -Id $appProcess.Id -Force }
     $env:APPDATA = $previousAppData

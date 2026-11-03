@@ -100,7 +100,11 @@ Future<bool> originalOutput(Directory private, List<int> input) async {
     final running = process;
     timer = Timer(const Duration(seconds: 2), () => running.kill());
     final errors = running.stderr.listen((_) {});
-    final output = running.stdout.listen(stdout.add);
+    final outputDone = Completer<void>();
+    final output = running.stdout.listen(
+      stdout.add,
+      onDone: outputDone.complete,
+    );
     // Write concurrently: existing commands may ignore stdin or produce output first.
     unawaited(() async {
       try {
@@ -109,6 +113,7 @@ Future<bool> originalOutput(Directory private, List<int> input) async {
       } catch (_) {}
     }());
     await running.exitCode.timeout(const Duration(seconds: 3));
+    await outputDone.future.timeout(const Duration(seconds: 1));
     await output.cancel();
     await errors.cancel();
     return true;

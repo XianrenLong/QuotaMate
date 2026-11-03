@@ -147,14 +147,43 @@ void main() {
         'unrelated': true,
       }),
     );
-    await ClaudeConnection.enableCollector(cli, root, cli);
-    await ClaudeConnection.enableCollector(
-      cli,
-      root,
-      cli,
-    ); // Replacing an existing .exe and settings is safe.
+    final relay = Platform.environment['QUOTAMATE_TEST_RELAY'];
+    expect(relay, isNotNull);
+    await ClaudeConnection.enableCollector(cli, root, relay!);
+    await ClaudeConnection.enableCollector(cli, root, relay);
     final enabled = jsonDecode(settings.readAsStringSync()) as Map;
     expect(enabled['statusLine']['command'], contains('-EncodedCommand'));
+    final encoded = (enabled['statusLine']['command'] as String)
+        .split(' -EncodedCommand ')[1]
+        .split(' ')
+        .first;
+    final capture = await Process.start('powershell.exe', [
+      '-NoLogo',
+      '-NoProfile',
+      '-NonInteractive',
+      '-EncodedCommand',
+      encoded,
+    ]);
+    final output = capture.stdout.drain<void>();
+    final errors = capture.stderr.drain<void>();
+    capture.stdin.writeln(
+      jsonEncode({
+        'session_id': 'sample-会话',
+        'rate_limits': {
+          'five_hour': {'used_percentage': 12},
+        },
+      }),
+    );
+    await capture.stdin.close();
+    expect(await capture.exitCode.timeout(const Duration(seconds: 8)), 0);
+    await Future.wait([output, errors]);
+    final captured = await ClaudeConnection.read(cli, root);
+    expect(captured.account.primary?.used, 12);
+    expect(
+      captured.account.identityFingerprint,
+      ClaudeConnection.identityHash(status),
+    );
+
     expect((await ClaudeConnection.read(cli, root)).collectorEnabled, true);
     expect(await ClaudeConnection.disableCollector(root), true);
     expect(jsonDecode(settings.readAsStringSync()), {
