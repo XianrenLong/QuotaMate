@@ -838,6 +838,7 @@ class AppController extends ChangeNotifier {
       final result = await ConnectionDiagnostics.run(
         profile,
         configured: isClaude ? claudeExecutable : executable,
+        readClaudeProfile: readSubscriptionDates,
         onProgress: (steps) {
           if (!_disposed) {
             connectionReport = ConnectionReport(

@@ -50,6 +50,7 @@ class ConnectionDiagnostics {
   static Future<ConnectionReport> run(
     SourceProfile profile, {
     String? configured,
+    bool readClaudeProfile = false,
     Future<String?> Function()? locate,
     void Function(List<ConnectionCheck>)? onProgress,
     Future<AccountSnapshot> Function(String, String)? identity,
@@ -159,7 +160,7 @@ class ConnectionDiagnostics {
                 ClaudeConnection.read(
                   executable,
                   profile.root,
-                  readSubscriptionDates: false,
+                  readSubscriptionDates: readClaudeProfile,
                 ));
         email = result.account.email;
         if (result.authenticated &&
