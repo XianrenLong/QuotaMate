@@ -11,6 +11,7 @@
 #include <vector>
 #include "resource.h"
 #include "utils.h"
+#include "startup.h"
 
 namespace {
 using flutter::EncodableValue;
@@ -33,10 +34,13 @@ std::string Argument(const EncodableMap* args, const char* key) {
   const auto* text = std::get_if<std::string>(&item->second);
   return text ? *text : "";
 }
-std::wstring ModuleDirectory() {
+std::wstring ModulePath() {
   std::vector<wchar_t> buffer(32768);
   const DWORD length = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
-  return std::filesystem::path(std::wstring(buffer.data(), length)).parent_path().wstring();
+  return std::wstring(buffer.data(), length);
+}
+std::wstring ModuleDirectory() {
+  return std::filesystem::path(ModulePath()).parent_path().wstring();
 }
 bool Open(HWND hwnd, const std::wstring& target, const wchar_t* arguments = nullptr) {
   return reinterpret_cast<INT_PTR>(ShellExecuteW(hwnd, L"open", target.c_str(), arguments, nullptr, SW_SHOWNORMAL)) > 32;
@@ -68,9 +72,13 @@ NativeBridge::NativeBridge(HWND window, flutter::BinaryMessenger* messenger)
 NativeBridge::~NativeBridge() {
   channel_->SetMethodCallHandler(nullptr);
   if (tray_added_) Shell_NotifyIconW(NIM_DELETE, &tray_);
+  RemovePropW(window_, L"QuotaMate.TrayAvailable");
+  RemovePropW(window_, L"QuotaMate.CloseToTray");
 }
 void NativeBridge::AddTray() {
   tray_added_ = Shell_NotifyIconW(NIM_ADD, &tray_) != FALSE;
+  if (tray_added_) SetPropW(window_, L"QuotaMate.TrayAvailable", reinterpret_cast<HANDLE>(static_cast<INT_PTR>(1)));
+  else RemovePropW(window_, L"QuotaMate.TrayAvailable");
   if (tray_added_) {
     tray_.uVersion = NOTIFYICON_VERSION_4;
     Shell_NotifyIconW(NIM_SETVERSION, &tray_);
@@ -93,7 +101,12 @@ void NativeBridge::ApplyAppearance() {
   DwmSetWindowAttribute(window_, 20, &dark, sizeof(dark));
 }
 bool NativeBridge::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam) {
-  (void)wparam;
+  if (message == WM_APP + 43) { quitting_ = true; PostMessageW(window_, WM_CLOSE, 0, 0); return true; }
+  if (message == WM_QUERYENDSESSION) quitting_ = true;
+  if (message == WM_ENDSESSION && !wparam) quitting_ = false;
+  if (message == WM_CLOSE && close_to_tray_ && tray_added_ && !quitting_) {
+    ShowWindow(window_, SW_HIDE); return true;
+  }
   if (message == taskbar_created_) { AddTray(); return true; }
   if (message == WM_SETTINGCHANGE) { ApplyAppearance(); return false; }
   if (message == WM_DWMCOLORIZATIONCOLORCHANGED) { ApplyAppearance(); return true; }
@@ -115,7 +128,7 @@ bool NativeBridge::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam) {
     PostMessageW(window_, WM_NULL, 0, 0);
     if (action == kOpen) ShowMainWindow();
     if (action == kRefresh) channel_->InvokeMethod("refresh", nullptr);
-    if (action == kQuit) PostMessageW(window_, WM_CLOSE, 0, 0);
+    if (action == kQuit) PostMessageW(window_, WM_APP + 43, 0, 0);
   }
   return true;
 }
@@ -124,7 +137,21 @@ void NativeBridge::HandleCall(const flutter::MethodCall<EncodableValue>& call,
     std::unique_ptr<flutter::MethodResult<EncodableValue>> result) {
   const auto* args = std::get_if<EncodableMap>(call.arguments());
   const auto& method = call.method_name();
-  if (method == "setLanguage") {
+  if (method == "setWindowBehavior") {
+    const auto value = args ? args->find(EncodableValue("closeToTray")) : EncodableMap::const_iterator{};
+    const bool* enabled = args && value != args->end() ? std::get_if<bool>(&value->second) : nullptr;
+    if (!enabled) { result->Error("argument", "Missing window preference"); return; }
+    close_to_tray_ = *enabled && tray_added_;
+    SetPropW(window_, L"QuotaMate.CloseToTray", reinterpret_cast<HANDLE>(static_cast<INT_PTR>(close_to_tray_ ? 2 : 1)));
+    result->Success(EncodableValue(!*enabled || tray_added_)); return;
+  } else if (method == "getLaunchAtLogin") {
+    result->Success(EncodableValue(quotamate::StartupRegistered(ModulePath()))); return;
+  } else if (method == "setLaunchAtLogin") {
+    const auto value = args ? args->find(EncodableValue("enabled")) : EncodableMap::const_iterator{};
+    const bool* enabled = args && value != args->end() ? std::get_if<bool>(&value->second) : nullptr;
+    if (!enabled) { result->Error("argument", "Missing startup preference"); return; }
+    result->Success(EncodableValue(quotamate::RegisterStartup(*enabled, ModulePath()) == ERROR_SUCCESS)); return;
+  } else if (method == "setLanguage") {
     english_ = Argument(args, "language") == "en";
   } else if (method == "setAppearance") {
     appearance_ = Argument(args, "appearance"); ApplyAppearance();

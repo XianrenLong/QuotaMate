@@ -10,6 +10,7 @@ add_executable(${BINARY_NAME} WIN32
   "flutter_window.cpp"
   "main.cpp"
   "native_bridge.cpp"
+  "startup.cpp"
   "utils.cpp"
   "win32_window.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
@@ -40,3 +41,13 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
+
+# Isolated native integration test, never installed or bundled with the app.
+add_executable(quotamate_windows_startup_test EXCLUDE_FROM_ALL
+  "../../tool/windows_startup_test.cpp" "startup.cpp")
+apply_standard_settings(quotamate_windows_startup_test)
+target_compile_options(quotamate_windows_startup_test PRIVATE /utf-8)
+target_link_libraries(quotamate_windows_startup_test PRIVATE advapi32)
+set_target_properties(quotamate_windows_startup_test PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/tests")

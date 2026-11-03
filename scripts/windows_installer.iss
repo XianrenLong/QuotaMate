@@ -38,3 +38,12 @@ Name: "{autodesktop}\QuotaMate"; Filename: "{app}\quota_mate.exe"; Tasks: deskto
 [Run]
 Filename: "{app}\quota_mate.exe"; Description: "Launch QuotaMate"; Flags: nowait postinstall skipifsilent
 ; User databases and Claude statusLine settings are deliberately left intact on uninstall.
+
+[Code]
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var Current: String;
+begin
+  if (CurUninstallStep = usUninstall) and RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', 'QuotaMate', Current) then
+    if CompareText(Current, '"' + ExpandConstant('{app}\quota_mate.exe') + '" --background') = 0 then
+      RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', 'QuotaMate');
+end;

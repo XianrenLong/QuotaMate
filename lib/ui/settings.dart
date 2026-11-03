@@ -13,6 +13,7 @@ import '../data/native_bridge.dart';
 import '../data/reference_pricing.dart';
 import 'widgets.dart';
 import 'localized.dart';
+import 'maintenance.dart';
 
 class AlertsPage extends StatelessWidget {
   final AppController c;
@@ -211,6 +212,11 @@ class SettingsPage extends StatelessWidget {
             ],
           ),
         ),
+        SizedBox(height: 14),
+        ConnectionHealthPanel(c),
+        SizedBox(height: 14),
+        if (c.isWindows) ...[WindowsBehaviorPanel(c), SizedBox(height: 14)],
+        UpdatesPanel(c),
         SizedBox(height: 14),
         Panel(
           child: Column(

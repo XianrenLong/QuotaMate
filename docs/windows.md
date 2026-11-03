@@ -1,12 +1,12 @@
 # Windows 使用与构建指南
 
-[返回首页](../README.md) · [Windows 安装程序](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-windows-x64-setup.exe) · [便携 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.25-alpha/QuotaMate-0.1.25-windows-x64.zip)
+[返回首页](../README.md) · [Windows 安装程序](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.26-alpha/QuotaMate-0.1.26-windows-x64-setup.exe) · [便携 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.26-alpha/QuotaMate-0.1.26-windows-x64.zip)
 
 ## 安装与首次使用
 
 首版为 **Windows x64 Alpha**。推荐 Windows 11；最低目标为 Windows 10 1809，原客户端的系统要求另行适用。目前不提供原生 ARM64 或 32 位安装包。
 
-1. 下载 `QuotaMate-0.1.25-windows-x64-setup.exe` 并运行。安装到当前用户目录，不请求管理员权限。
+1. 下载 `QuotaMate-0.1.26-windows-x64-setup.exe` 并运行。安装到当前用户目录，不请求管理员权限。
 2. 从开始菜单打开 **QuotaMate**。首次启动默认进入统计，显示今日数据；语言、主题和模型参考价格都已内置。
 3. 在右上角选择 **GPT** 或 **Claude**，按下面步骤核对本机连接。
 4. 用原客户端正常工作后回到 QuotaMate 刷新。仅登录账号不会生成 Token 历史。
@@ -47,10 +47,20 @@
 | 页面快捷键 | Ctrl+1 统计、Ctrl+2 总览、Ctrl+3 账号、Ctrl+, 设置 |
 | 操作快捷键 | Ctrl+R 刷新、Ctrl+E 导出 |
 | 系统托盘 | 点击打开窗口；右键可刷新或退出；剩余额度在图标提示中显示 |
-| 关闭窗口 | 退出应用；最小化可继续后台刷新 |
+| 关闭窗口 | 默认退出；可在设置开启「关闭窗口后继续运行」，托盘菜单提供彻底退出 |
+| 登录启动 | 默认不登记；在设置主动开启后以托盘方式启动，Windows 启动应用设置仍可禁用 |
+| 再次打开 | 唤回已有实例，避免重复扫描与提醒 |
 | 提醒 | Windows 托盘通知；系统通知设置、勿扰模式可能抑制提示 |
 
 中文用户目录和含空格的安装路径属于自动测试覆盖范围。本机应用数据及采集目录限制为当前用户 / SYSTEM 访问；CSV 导出包含用量信息，请按个人数据保护。模型参考价格与 macOS 同源，用户自定义价格不会被覆盖。
+
+## 常驻与登录启动
+
+在 **设置 → Windows 运行方式** 中可分别开启关闭到托盘和登录启动。两项默认关闭。关闭到托盘需要系统托盘可用；托盘不可用时，关闭仍退出，后台启动也会显示窗口，避免出现无法访问的隐藏进程。
+
+登录启动只登记当前用户的 `Run` 启动项，命令为已运行的本机 EXE 加 `--background`，不要求管理员权限，也不覆盖 Windows 的启动应用禁用策略。程序目录搬迁后，应在新位置重新开启；便携包同样适用。卸载仅删除指向该次安装目录的 QuotaMate 启动项，保留指向其他位置的登记和个人数据库。
+
+设置中还提供 [连接诊断与手动检查更新](connection-checks.md)。
 
 ## WSL 与已知范围
 
@@ -92,7 +102,7 @@ CI 不读取真实账号，使用合成 CLI 与隔离数据目录。安装包启
 ## 校验与排错
 
 ```powershell
-Get-FileHash .\QuotaMate-0.1.25-windows-x64-setup.exe -Algorithm SHA256
+Get-FileHash .\QuotaMate-0.1.26-windows-x64-setup.exe -Algorithm SHA256
 ```
 
 与同一个 Release 中的 `SHA256SUMS-windows` 比较。缺数据先检查时间范围、数据目录和 Windows / WSL 环境；缺额度先检查官方工具的当前登录和状态栏快照。
