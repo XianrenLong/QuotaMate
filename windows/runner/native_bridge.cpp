@@ -3,6 +3,7 @@
 #include <flutter/standard_method_codec.h>
 #include <dwmapi.h>
 #include <shobjidl.h>
+#include <shlobj.h>
 #include <wrl/client.h>
 #include <algorithm>
 #include <filesystem>
@@ -94,7 +95,8 @@ void NativeBridge::ApplyAppearance() {
 bool NativeBridge::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam) {
   (void)wparam;
   if (message == taskbar_created_) { AddTray(); return true; }
-  if (message == WM_SETTINGCHANGE || message == WM_DWMCOLORIZATIONCOLORCHANGED) { ApplyAppearance(); return true; }
+  if (message == WM_SETTINGCHANGE) { ApplyAppearance(); return false; }
+  if (message == WM_DWMCOLORIZATIONCOLORCHANGED) { ApplyAppearance(); return true; }
   if (message != kTrayMessage) return false;
   const UINT event = LOWORD(lparam);
   if (event == NIN_SELECT || event == NIN_KEYSELECT || event == WM_LBUTTONDBLCLK) {

@@ -151,6 +151,7 @@ class DesktopPlatform {
     String identity,
   ) {
     final command =
+        r'[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); ' +
         '& ${powershellQuote(executable)} --root ${powershellQuote(root)} --identity ${powershellQuote(identity)}';
     return 'powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand ${encodedPowerShell(command)} # quotamate-claude-statusline';
   }
