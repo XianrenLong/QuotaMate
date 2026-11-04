@@ -13,6 +13,8 @@ public static class QuotaMateWindow {
   [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hwnd);
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr GetProp(IntPtr hwnd, string name);
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr hwnd, uint message, IntPtr wparam, IntPtr lparam);
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);
 }
 '@
 function Wait-QuotaMateWindow {
@@ -45,6 +47,34 @@ try {
     $hwnd = Wait-QuotaMateWindow
     $tray = [QuotaMateWindow]::GetProp($hwnd,'QuotaMate.TrayAvailable') -ne [IntPtr]::Zero
     Write-Host "Tray support in this Windows session: $tray"
+    if ($tray) {
+        # NIN_SELECT with a bottom-right anchor, as a left click on the tray icon sends.
+        [QuotaMateWindow]::PostMessage($hwnd,0x802A,[IntPtr](700 -bor (740 -shl 16)),[IntPtr]0x0400) | Out-Null
+        $panel = [IntPtr]::Zero
+        for ($attempt = 0; $attempt -lt 20 -and ($panel -eq [IntPtr]::Zero -or -not [QuotaMateWindow]::IsWindowVisible($panel)); $attempt++) {
+            Start-Sleep -Milliseconds 200
+            $panel = [QuotaMateWindow]::FindWindow('QuotaMateTrayPanel','QuotaMate')
+        }
+        if ($panel -eq [IntPtr]::Zero -or -not [QuotaMateWindow]::IsWindowVisible($panel)) { throw 'Tray click did not open the panel' }
+        Start-Sleep -Milliseconds 500
+        $bounds = New-Object QuotaMateWindow+RECT
+        [QuotaMateWindow]::GetWindowRect($panel,[ref]$bounds) | Out-Null
+        if (($bounds.Right - $bounds.Left) -lt 300 -or ($bounds.Bottom - $bounds.Top) -lt 200) { throw 'Tray panel has an unexpected size' }
+        # On GitHub Actions the screenshot joins the uploaded test packages for review.
+        $screenshot = $env:QUOTAMATE_PANEL_SCREENSHOT
+        if (-not $screenshot -and $env:GITHUB_ACTIONS -eq 'true') { $screenshot = "$projectDirectory/dist/windows/tray-panel-smoke.png" }
+        if ($screenshot) {
+            Add-Type -AssemblyName System.Drawing
+            $image = New-Object System.Drawing.Bitmap ($bounds.Right - $bounds.Left), ($bounds.Bottom - $bounds.Top)
+            $canvas = [System.Drawing.Graphics]::FromImage($image)
+            $canvas.CopyFromScreen($bounds.Left, $bounds.Top, 0, 0, $image.Size)
+            $image.Save($screenshot, [System.Drawing.Imaging.ImageFormat]::Png)
+            $canvas.Dispose(); $image.Dispose()
+        }
+        [QuotaMateWindow]::PostMessage($panel,0x0100,[IntPtr]0x1B,[IntPtr]::Zero) | Out-Null
+        Start-Sleep -Milliseconds 300
+        if ([QuotaMateWindow]::IsWindowVisible($panel)) { throw 'Escape did not close the tray panel' }
+    }
     [QuotaMateWindow]::PostMessage($hwnd,0x0010,[IntPtr]::Zero,[IntPtr]::Zero) | Out-Null
     Start-Sleep -Milliseconds 500
     $appProcess.Refresh()

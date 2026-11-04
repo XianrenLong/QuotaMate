@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -11,6 +13,7 @@ import 'overview_account.dart';
 import '../data/models.dart';
 import '../data/native_bridge.dart';
 import '../data/reference_pricing.dart';
+import '../tray_panel.dart';
 import 'widgets.dart';
 import 'localized.dart';
 import 'maintenance.dart';
@@ -86,6 +89,36 @@ class AlertsPage extends StatelessWidget {
             ],
           ),
         ),
+        if (Platform.isMacOS) ...[
+          SizedBox(height: 14),
+          Panel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MiniHeading('菜单栏', icon: LucideIcons.panelTop),
+                SizedBox(height: 20),
+                settingRow(
+                  '菜单栏标题',
+                  '点击菜单栏图标查看额度、消耗预测和今日用量。',
+                  trailing: Segments(
+                    ['百分比', '加倒计时', '两家都显示', '仅图标'],
+                    c.trayTitle.index,
+                    (i) => c.setTrayTitle(TrayTitle.values[i]),
+                  ),
+                ),
+                SizedBox(height: 14),
+                Builder(
+                  builder: (context) => label(
+                    '预测按同一额度窗口内的采样计算，至少需要相隔 10 分钟的两次采样。',
+                    size: 12,
+                    color: themeColor(context, C.muted),
+                    lines: 2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         SizedBox(height: 14),
         Panel(
           child: Column(

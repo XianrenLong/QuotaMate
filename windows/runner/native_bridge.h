@@ -8,6 +8,7 @@
 #include <shellapi.h>
 #include <memory>
 #include <string>
+#include "tray_panel.h"
 
 class NativeBridge {
  public:
@@ -20,9 +21,11 @@ class NativeBridge {
                   std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void AddTray();
   void ApplyAppearance();
+  void Invoke(const char* method, flutter::EncodableMap args);
   void ShowMainWindow();
   HWND window_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
+  std::unique_ptr<TrayPanel> panel_;
   NOTIFYICONDATAW tray_{};
   UINT taskbar_created_;
   bool english_ = false;
