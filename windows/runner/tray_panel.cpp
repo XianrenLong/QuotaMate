@@ -17,7 +17,7 @@ using namespace Gdiplus;
 constexpr wchar_t kClass[] = L"QuotaMateTrayPanel";
 constexpr wchar_t kFont[] = L"Microsoft YaHei UI";
 constexpr wchar_t kIcons[] = L"Segoe MDL2 Assets";
-constexpr float kWidth = 340, kPad = 16, kInner = kWidth - 2 * kPad;
+constexpr float kWidth = 356, kPad = 16, kInner = kWidth - 2 * kPad;
 
 std::wstring Wide(const std::string& value) {
   const int length = MultiByteToWideChar(CP_UTF8, 0, value.data(), static_cast<int>(value.size()), nullptr, 0);
@@ -50,15 +50,25 @@ const EncodableList& List(const EncodableMap& map, const char* key) {
 const EncodableMap* Map(const EncodableValue& value) { return std::get_if<EncodableMap>(&value); }
 
 // The app's own palette, matching lib/ui/palette.dart and the macOS panel.
-struct Palette { Color card, ink, muted, tile, track, line, blue, green, amberText, amberFill, greenText; };
+struct Palette {
+  Color card, ink, muted, tile, pillBg, line;
+  Color blue, blueCard, blueBorder, blueTrack;
+  Color green, greenCard, greenBorder, greenTrack, greenPill, greenPillBorder, greenText;
+  Color amberText, amberFill, amberBorder;
+};
 Color Rgb(UINT32 hex, BYTE alpha = 255) {
   return Color(alpha, static_cast<BYTE>(hex >> 16 & 0xFF), static_cast<BYTE>(hex >> 8 & 0xFF), static_cast<BYTE>(hex & 0xFF));
 }
 Palette Colors(bool dark) {
-  return dark ? Palette{Rgb(0x252836), Rgb(0xF0F1F8), Rgb(0xABB0C4), Rgb(0x1D1F2B), Rgb(0x383D4F), Rgb(0x3A3E50),
-                        Rgb(0x6BA7FF), Rgb(0x6ACF83), Rgb(0xF4CF80), Rgb(0x3E3325), Rgb(0x91DFA4)}
-              : Palette{Rgb(0xFBFAFD), Rgb(0x171A29), Rgb(0x7C8099), Rgb(0xEFEEF4), Rgb(0xE5E4EE), Rgb(0xE9E8F0),
-                        Rgb(0x3483FF), Rgb(0x35B54A), Rgb(0x91600A), Rgb(0xFFF4DF), Rgb(0x24833A)};
+  return dark
+      ? Palette{Rgb(0x252836), Rgb(0xF0F1F8), Rgb(0xABB0C4), Rgb(0x1D1F2B), Rgb(0x1D1F2B), Rgb(0x3A3E50),
+                Rgb(0x6BA7FF), Rgb(0x1E2B42), Rgb(0x2F4569), Rgb(0x2C4063),
+                Rgb(0x6ACF83), Rgb(0x1C3026), Rgb(0x2B4B3B), Rgb(0x294638), Rgb(0x233D30), Rgb(0x315944), Rgb(0x91DFA4),
+                Rgb(0xF4CF80), Rgb(0x3E3325), Rgb(0x574630)}
+      : Palette{Rgb(0xFBFAFD), Rgb(0x171A29), Rgb(0x6E738A), Rgb(0xF1F0F6), Rgb(0xE6E5EE), Rgb(0xE4E3EC),
+                Rgb(0x2F7CF6), Rgb(0xE8F1FF), Rgb(0xC9DCFC), Rgb(0xC3D9FA),
+                Rgb(0x32B24D), Rgb(0xE6F6EC), Rgb(0xC0E6CD), Rgb(0xBAE1C7), Rgb(0xD2F0DC), Rgb(0xA8DFBA), Rgb(0x1E7A34),
+                Rgb(0x915F09), Rgb(0xFFF3D6), Rgb(0xF0D49B)};
 }
 void Rounded(GraphicsPath& path, float x, float y, float w, float h, float r) {
   r = std::min(r, std::min(w, h) / 2);
@@ -136,6 +146,8 @@ void TrayPanel::Update(const EncodableMap& panel) {
   hours_start_ = Text(panel, "hoursStart");
   hours_label_ = Text(panel, "hoursLabel");
   hours_end_ = Text(panel, "hoursEnd");
+  const auto* online = Find(panel, "online");
+  online_ = online && std::get_if<bool>(online) ? *std::get_if<bool>(online) : !account_.empty();
   const auto* busy = Find(panel, "busy");
   busy_ = busy && std::get_if<bool>(busy) && *std::get_if<bool>(busy);
   windows_.clear();
@@ -143,7 +155,11 @@ void TrayPanel::Update(const EncodableMap& panel) {
     const auto* w = Map(item);
     if (!w) continue;
     const auto* remaining = Find(*w, "remaining");
-    windows_.push_back({Text(*w, "label"), Text(*w, "value"), Text(*w, "reset"), Text(*w, "forecast"),
+    std::wstring unit = Text(*w, "unit");
+    if (unit.empty()) unit = L"剩余";
+    std::wstring forecast = Text(*w, "shortForecast");
+    if (forecast.empty()) forecast = Text(*w, "forecast");
+    windows_.push_back({Text(*w, "label"), unit, Text(*w, "value"), Text(*w, "reset"), forecast,
                         Utf8(*w, "color") == "green", Utf8(*w, "forecastTone") == "warning",
                         remaining ? static_cast<int>(Number(*remaining)) : 0});
   }
@@ -212,116 +228,176 @@ void TrayPanel::Place() {
 float TrayPanel::Render(Graphics& g) {
   const Palette c = Colors(dark_);
   targets_.clear();
-  float y = kPad;
+  float y = 14;
   const float right = kPad + kInner;
+  Pen divider(c.line, 1);
 
-  // Header: app name, provider switch and refresh.
-  Draw(g, L"", 15, c.blue, kPad, y + 3, 20, 20, StringAlignmentNear, false, kIcons);
-  Draw(g, L"QuotaMate", 15, c.ink, kPad + 24, y, 140, 26, StringAlignmentNear, true);
+  // Header: hourglass icon, app name, provider switch, refresh, and compact status row.
+  Draw(g, L"", 22, c.blue, kPad, y + 6, 28, 32, StringAlignmentNear, false, kIcons);
+  const float header_left = kPad + 34;
+  Draw(g, L"QuotaMate", 16, c.ink, header_left, y, 130, 24, StringAlignmentNear, true);
   const float refresh_x = right - 24;
-  Draw(g, L"", 13, busy_ ? c.line : c.muted, refresh_x, y + 1, 24, 24, StringAlignmentCenter, false, kIcons);
-  targets_.push_back({refresh_x, y, 24, 26, Action::kRefresh, {}});
+  Fill(g, c.card, refresh_x, y, 24, 24, 6);
+  Stroke(g, c.line, refresh_x, y, 24, 24, 6);
+  Draw(g, L"", 12, busy_ ? c.line : c.muted, refresh_x, y, 24, 24, StringAlignmentCenter, false, kIcons);
+  targets_.push_back({refresh_x, y, 24, 24, Action::kRefresh, {}});
+
   float pills = 4;
   std::vector<float> widths;
   for (const auto& p : providers_) {
-    widths.push_back(Measure(g, p.label, 12, true) + 18);
+    widths.push_back(Measure(g, p.label, 11, true) + 20);
     pills += widths.back();
   }
   float px = refresh_x - 6 - pills;
-  Fill(g, c.tile, px, y + 2, pills, 22, 11);
+  Fill(g, c.pillBg, px, y + 1, pills, 22, 11);
   px += 2;
   for (size_t i = 0; i < providers_.size(); ++i) {
     const bool selected = providers_[i].id == provider_;
-    if (selected) Fill(g, c.blue, px, y + 4, widths[i], 18, 9);
-    Draw(g, providers_[i].label, 12, selected ? Rgb(0xFFFFFF) : c.muted, px, y + 4, widths[i], 18,
+    if (selected) Fill(g, c.blue, px, y + 3, widths[i], 18, 9);
+    Draw(g, providers_[i].label, 11, selected ? Rgb(0xFFFFFF) : c.muted, px, y + 3, widths[i], 18,
          StringAlignmentCenter, selected);
-    targets_.push_back({px, y + 2, widths[i], 22, Action::kProvider, providers_[i].id});
+    targets_.push_back({px, y + 1, widths[i], 22, Action::kProvider, providers_[i].id});
     px += widths[i];
   }
-  y += 26 + 8;
+  y += 26;
 
-  // Account and data age.
-  for (const auto* line : {&account_, &status_}) {
-    if (line->empty()) continue;
-    Draw(g, *line, 12, c.muted, kPad, y, kInner, 17);
-    y += 17;
+  // Compact single-line account and status with status indicator dot.
+  std::wstring subtitle = account_;
+  if (subtitle.empty()) {
+    subtitle = status_;
+  } else if (!status_.empty() && status_ != L"已同步" && status_ != L"Synced") {
+    subtitle += L" · " + status_;
   }
-  y += 10;
+  SolidBrush dot_brush(online_ ? c.green : c.muted);
+  g.FillEllipse(&dot_brush, header_left, y + 5.0f, 6.5f, 6.5f);
+  Draw(g, subtitle, 11, c.muted, header_left + 12, y, right - (header_left + 12), 17);
+  y += 17 + 12;
 
+  g.DrawLine(&divider, 0.0f, y, kWidth, y);
+  y += 1 + 14;
+
+  // Middle section: dual circular ring quota cards side by side.
   if (windows_.empty()) {
-    Fill(g, c.tile, kPad, y, kInner, 36, 7);
-    Draw(g, empty_, 12, c.muted, kPad + 10, y, kInner - 20, 36);
-    y += 36 + 12;
-  }
-  for (const auto& w : windows_) {
-    Draw(g, w.label, 13, c.ink, kPad, y, kInner * 0.6f, 18);
-    Draw(g, w.value, 13, c.ink, kPad, y, kInner, 18, StringAlignmentFar, true);
-    y += 18 + 5;
-    Fill(g, c.track, kPad, y, kInner, 7, 3.5f);
-    const float share = static_cast<float>(std::clamp(w.remaining, 0, 100)) / 100.0f;
-    Fill(g, w.green ? c.green : c.blue, kPad, y, std::max(4.0f, kInner * share), 7, 3.5f);
-    y += 7 + 5;
-    Draw(g, w.reset, 12, c.muted, kPad, y, kInner, 16);
-    y += 16;
-    if (!w.forecast.empty()) {
-      y += 5;
-      Fill(g, w.warning ? c.amberFill : c.tile, kPad, y, kInner, 26, 6);
-      const Color tone = w.warning ? c.amberText : c.greenText;
-      Draw(g, w.warning ? L"" : L"", 11, tone, kPad + 8, y, 16, 26, StringAlignmentNear, false, kIcons);
-      Draw(g, w.forecast, 12, tone, kPad + 28, y, kInner - 36, 26);
-      y += 26;
+    Fill(g, c.tile, kPad, y, kInner, 40, 10);
+    Stroke(g, c.line, kPad, y, kInner, 40, 10);
+    Draw(g, empty_, 12, c.muted, kPad + 12, y, kInner - 24, 40);
+    y += 40 + 14;
+  } else {
+    const size_t count = windows_.size();
+    const float gap = 10.0f;
+    const float card_w = (kInner - gap * static_cast<float>(count - 1)) / static_cast<float>(count);
+    bool any_forecast = false;
+    for (const auto& w : windows_) {
+      if (!w.forecast.empty()) any_forecast = true;
     }
-    y += 12;
+    const float card_h = any_forecast ? 190.0f : 160.0f;
+    for (size_t i = 0; i < count; ++i) {
+      const auto& w = windows_[i];
+      const float cx = kPad + static_cast<float>(i) * (card_w + gap);
+      const Color card_bg = w.green ? c.greenCard : c.blueCard;
+      const Color card_border = w.green ? c.greenBorder : c.blueBorder;
+      const Color ring_track = w.green ? c.greenTrack : c.blueTrack;
+      const Color accent = w.green ? c.green : c.blue;
+      Fill(g, card_bg, cx, y, card_w, card_h, 12);
+      Stroke(g, card_border, cx, y, card_w, card_h, 12);
+
+      float cy = y + 12;
+      Draw(g, w.label, 13, c.ink, cx + 8, cy, card_w - 16, 18, StringAlignmentCenter, true);
+      cy += 18 + 8;
+
+      const float ring_size = 84.0f;
+      const float rx = cx + (card_w - ring_size) / 2.0f;
+      Pen track_pen(ring_track, 7.5f);
+      g.DrawEllipse(&track_pen, rx, cy, ring_size, ring_size);
+      const float share = static_cast<float>(std::clamp(w.remaining, 0, 100)) / 100.0f;
+      if (share > 0.0f) {
+        Pen arc_pen(accent, 7.5f);
+        arc_pen.SetStartCap(LineCapRound);
+        arc_pen.SetEndCap(LineCapRound);
+        g.DrawArc(&arc_pen, rx, cy, ring_size, ring_size, -90.0f, 360.0f * share);
+      }
+      const std::wstring pct = std::to_wstring(w.remaining) + L"%";
+      Draw(g, pct, 19, c.ink, rx, cy + 20, ring_size, 24, StringAlignmentCenter, true);
+      Draw(g, w.unit, 11, c.muted, rx, cy + 44, ring_size, 16, StringAlignmentCenter, false);
+      cy += ring_size + 8;
+
+      Draw(g, w.reset, 11.5f, c.ink, cx + 6, cy, card_w - 12, 16, StringAlignmentCenter);
+      cy += 16 + 8;
+
+      if (!w.forecast.empty()) {
+        const float pill_x = cx + 8;
+        const float pill_w = card_w - 16;
+        const Color pill_bg = w.warning ? c.amberFill : c.greenPill;
+        const Color pill_border = w.warning ? c.amberBorder : c.greenPillBorder;
+        const Color pill_tone = w.warning ? c.amberText : c.greenText;
+        Fill(g, pill_bg, pill_x, cy, pill_w, 22, 11);
+        Stroke(g, pill_border, pill_x, cy, pill_w, 22, 11);
+        Draw(g, w.forecast, 10.5f, pill_tone, pill_x + 6, cy, pill_w - 12, 22, StringAlignmentCenter, true);
+      }
+    }
+    y += card_h + 14;
   }
 
-  Pen divider(c.line, 1);
-  g.DrawLine(&divider, kPad, y, right, y);
-  y += 1 + 10;
+  // Unified Today overview card.
+  Draw(g, today_, 12.5f, c.ink, kPad, y, kInner, 17, StringAlignmentNear, true);
+  y += 17 + 8;
+  const float box_y = y;
+  const float box_h = 132.0f;
+  Fill(g, c.tile, kPad, box_y, kInner, box_h, 12);
+  Stroke(g, c.line, kPad, box_y, kInner, box_h, 12);
 
-  // Today.
-  Draw(g, today_, 12, c.muted, kPad, y, kInner, 16);
-  y += 16 + 8;
+  float ty = box_y + 10;
   if (!metrics_.empty()) {
     const float count = static_cast<float>(metrics_.size());
-    const float tile = (kInner - 8 * (count - 1)) / count;
+    const float col_w = kInner / count;
     for (size_t i = 0; i < metrics_.size(); ++i) {
-      const float x = kPad + static_cast<float>(i) * (tile + 8);
-      Fill(g, c.tile, x, y, tile, 48, 7);
-      Draw(g, metrics_[i].label, 11, c.muted, x + 9, y + 6, tile - 18, 15);
-      Draw(g, metrics_[i].value, 16, c.ink, x + 9, y + 21, tile - 18, 22, StringAlignmentNear, true);
+      const float x = kPad + static_cast<float>(i) * col_w;
+      if (i > 0) g.DrawLine(&divider, x, ty + 6, x, ty + 34);
+      Draw(g, metrics_[i].label, 11, c.muted, x + 4, ty, col_w - 8, 15, StringAlignmentCenter);
+      Draw(g, metrics_[i].value, 16, c.ink, x + 4, ty + 17, col_w - 8, 22, StringAlignmentCenter, true);
     }
-    y += 48 + 10;
   }
+  ty += 44;
+  g.DrawLine(&divider, kPad + 12, ty, right - 12, ty);
+  ty += 10;
+
   if (!hours_.empty()) {
+    const float bar_area_w = kInner - 24;
+    const float bar_x0 = kPad + 12;
     const float count = static_cast<float>(hours_.size());
-    const float bar = (kInner - 3 * (count - 1)) / count;
+    const float gap = 5.0f;
+    const float bar = (bar_area_w - gap * (count - 1)) / count;
     for (size_t i = 0; i < hours_.size(); ++i) {
-      const float h = std::max(2.0f, 32 * static_cast<float>(hours_[i]));
-      const BYTE alpha = i + 1 == hours_.size() ? 115 : 217;
-      Fill(g, Color(alpha, c.blue.GetR(), c.blue.GetG(), c.blue.GetB()), kPad + static_cast<float>(i) * (bar + 3), y + 32 - h, bar, h,
-           std::min(2.0f, h / 2));
+      const float h = std::max(4.0f, 38.0f * static_cast<float>(hours_[i]));
+      const BYTE alpha = i + 1 == hours_.size() ? 108 : 235;
+      Fill(g, Color(alpha, c.blue.GetR(), c.blue.GetG(), c.blue.GetB()),
+           bar_x0 + static_cast<float>(i) * (bar + gap), ty + 38.0f - h, bar, h, std::min(3.5f, h / 2));
     }
-    y += 32 + 4;
-    Draw(g, hours_start_, 11, c.muted, kPad, y, kInner / 3, 15);
-    Draw(g, hours_label_, 11, c.muted, kPad, y, kInner, 15, StringAlignmentCenter);
-    Draw(g, hours_end_, 11, c.muted, kPad, y, kInner, 15, StringAlignmentFar);
-    y += 15 + 12;
+    ty += 38 + 5;
+    Draw(g, hours_start_, 10.5f, c.muted, bar_x0, ty, bar_area_w / 3, 15);
+    Draw(g, hours_label_, 10.5f, c.muted, bar_x0, ty, bar_area_w, 15, StringAlignmentCenter);
+    Draw(g, hours_end_, 10.5f, c.muted, bar_x0, ty, bar_area_w, 15, StringAlignmentFar);
   }
+  y = box_y + box_h + 14;
+
+  g.DrawLine(&divider, 0.0f, y, kWidth, y);
+  y += 1 + 11;
 
   // Footer.
-  const float open_width = Measure(g, open_, 13) + 44;
-  Stroke(g, c.line, kPad, y, open_width, 30, 6);
-  Draw(g, L"", 12, c.ink, kPad + 10, y, 18, 30, StringAlignmentNear, false, kIcons);
-  Draw(g, open_, 13, c.ink, kPad + 32, y, open_width - 36, 30);
-  targets_.push_back({kPad, y, open_width, 30, Action::kOpen, {}});
-  const float quit_width = Measure(g, quit_, 13) + 4;
-  Draw(g, quit_, 13, c.muted, right - quit_width, y, quit_width, 30, StringAlignmentFar);
-  targets_.push_back({right - quit_width, y, quit_width, 30, Action::kQuit, {}});
-  const float settings_width = Measure(g, settings_, 13) + 4;
-  const float settings_x = right - quit_width - 14 - settings_width;
-  Draw(g, settings_, 13, c.muted, settings_x, y, settings_width, 30, StringAlignmentFar);
-  targets_.push_back({settings_x, y, settings_width, 30, Action::kSettings, {}});
-  y += 30 + kPad;
+  const float open_width = Measure(g, open_, 12) + 42;
+  Fill(g, c.card, kPad, y, open_width, 28, 7);
+  Stroke(g, c.line, kPad, y, open_width, 28, 7);
+  Draw(g, L"", 11.5f, c.ink, kPad + 10, y, 16, 28, StringAlignmentNear, false, kIcons);
+  Draw(g, open_, 12, c.ink, kPad + 29, y, open_width - 34, 28);
+  targets_.push_back({kPad, y, open_width, 28, Action::kOpen, {}});
+  const float quit_width = Measure(g, quit_, 12) + 4;
+  Draw(g, quit_, 12, c.muted, right - quit_width, y, quit_width, 28, StringAlignmentFar);
+  targets_.push_back({right - quit_width, y, quit_width, 28, Action::kQuit, {}});
+  const float settings_width = Measure(g, settings_, 12) + 4;
+  const float settings_x = right - quit_width - 12 - settings_width;
+  Draw(g, settings_, 12, c.muted, settings_x, y, settings_width, 28, StringAlignmentFar);
+  targets_.push_back({settings_x, y, settings_width, 28, Action::kSettings, {}});
+  y += 28 + 11;
   return y;
 }
 

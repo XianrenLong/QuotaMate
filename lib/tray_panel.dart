@@ -34,12 +34,13 @@ Map<String, dynamic> trayPayload(AppController c) {
         if (!c.demo && c.account != null)
           _ago(c.now.difference(c.account!.observed), t, c.now),
       ].join(' · '),
+      'online': c.demo || c.account?.signedIn == true,
       'busy': c.busy,
       'windows': [
         for (final secondary in [false, true]) ?_window(c, secondary),
       ],
       'empty': t(c.isClaude ? '尚无额度快照' : '暂无额度数据'),
-      'todayTitle': t('今日'),
+      'todayTitle': t('今日概览'),
       'metrics': _today(c),
       ..._hours(c),
       'actions': {
@@ -95,6 +96,7 @@ Map<String, dynamic>? _window(AppController c, bool secondary) {
   return {
     'label': t(_windowName(w, secondary)),
     'remaining': w.remaining,
+    'unit': t('剩余'),
     'value': t('${w.remaining}% 剩余'),
     'reset': t(
       w.resets == null ? '尚未获取恢复时间' : '${countdown(w.resets, c.now)}后重置',
@@ -102,9 +104,11 @@ Map<String, dynamic>? _window(AppController c, bool secondary) {
     'color': secondary ? 'green' : 'blue',
     if (f?.emptyAt != null) ...{
       'forecast': t('照现在的速度，约 ${countdown(f!.emptyAt, c.now)}后用完'),
+      'shortForecast': t('约 ${countdown(f.emptyAt, c.now)}后用完'),
       'forecastTone': 'warning',
     } else if (f?.remainingAtReset != null) ...{
       'forecast': t('预计重置时剩 ${f!.remainingAtReset}%'),
+      'shortForecast': t('预计重置时剩 ${f.remainingAtReset}%'),
       'forecastTone': f.remainingAtReset! <= c.threshold
           ? 'warning'
           : 'success',

@@ -26,7 +26,11 @@ class TrayPanel {
   void Hide();
 
  private:
-  struct Window { std::wstring label, value, reset, forecast; bool green = false, warning = false; int remaining = 0; };
+  struct Window {
+    std::wstring label, unit, value, reset, forecast;
+    bool green = false, warning = false;
+    int remaining = 0;
+  };
   struct Metric { std::wstring label, value; };
   struct Provider { std::string id; std::wstring label; };
   enum class Action { kProvider, kRefresh, kOpen, kSettings, kQuit };
@@ -41,7 +45,7 @@ class TrayPanel {
   Actions actions_;
   HWND hwnd_ = nullptr;
   ULONG_PTR gdiplus_ = 0;
-  bool dark_ = false, busy_ = false;
+  bool dark_ = false, online_ = true, busy_ = false;
   float scale_ = 1, height_ = 480;
   POINT anchor_{};
   ULONGLONG hidden_at_ = 0;

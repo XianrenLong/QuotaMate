@@ -94,11 +94,16 @@ void main() {
       expect(payload['title'], 'GPT 62%');
       expect(payload['warning'], isFalse);
       final panel = payload['panel'] as Map;
+      expect(panel['online'], isTrue);
+      expect(panel['todayTitle'], '今日概览');
       final windows = panel['windows'] as List;
       expect(windows.map((e) => e['label']), ['5 小时窗口', '每周窗口']);
+      expect(windows.first['unit'], '剩余');
       expect(windows.first['forecast'], '预计重置时剩 36%');
+      expect(windows.first['shortForecast'], '预计重置时剩 36%');
       expect(windows.first['forecastTone'], 'success');
       expect(windows.last['forecast'], startsWith('照现在的速度，约 2小时'));
+      expect(windows.last['shortForecast'], startsWith('约 2小时'));
       expect(windows.last['forecastTone'], 'warning');
       expect((panel['metrics'] as List).length, 3);
       expect((panel['hours'] as List).length, 12);
@@ -114,6 +119,8 @@ void main() {
       expect(trayPayload(c)['title'], '');
       c.language = AppLanguage.en;
       final panel = trayPayload(c)['panel'] as Map;
+      expect(panel['todayTitle'], 'Today overview');
+      expect((panel['windows'] as List).first['unit'], 'Remaining');
       expect(
         (panel['windows'] as List).first['forecast'],
         'About 36% left at reset',
@@ -121,6 +128,10 @@ void main() {
       expect(
         (panel['windows'] as List).last['forecast'],
         startsWith('At this pace, runs out in about 2h'),
+      );
+      expect(
+        (panel['windows'] as List).last['shortForecast'],
+        startsWith('Runs out in ~2h'),
       );
       expect((panel['actions'] as Map)['open'], 'Open QuotaMate');
       c.dispose();
