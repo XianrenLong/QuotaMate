@@ -82,7 +82,7 @@ String _ago(Duration age, String Function(String) t, DateTime now) =>
 String _windowName(QuotaWindow w, bool secondary) => switch (w.minutes) {
   300 => '5 小时窗口',
   10080 => '每周窗口',
-  _ => secondary ? '较长窗口' : '当前窗口',
+  _ => secondary ? '5 小时窗口' : '当前窗口',
 };
 
 Map<String, dynamic>? _window(AppController c, bool secondary) {

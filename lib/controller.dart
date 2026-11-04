@@ -401,24 +401,24 @@ class AppController extends ChangeNotifier {
         )
         .toList(),
   );
-  List<double> values({bool requests = false, int? period}) {
-    if (historicalDay != null && period == null) {
-      return [requests ? events.length.toDouble() : summary.total.toDouble()];
-    }
-    final n = period ?? days;
-    final start = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(Duration(days: n - 1));
-    final result = List<double>.filled(n, 0);
+  static const trendDays = 30;
+
+  bool get hasTrendRecords {
+    final start = DateTime(now.year, now.month, now.day - trendDays + 1);
+    return all.any((e) => !e.at.isBefore(start) && !e.at.isAfter(now));
+  }
+
+  List<double> values({bool requests = false, int period = trendDays}) {
+    final start = DateTime.utc(now.year, now.month, now.day - period + 1);
+    final result = List<double>.filled(period, 0);
     for (final e in all) {
-      final d = DateTime(
-        e.at.year,
-        e.at.month,
-        e.at.day,
+      final day = e.at.toLocal();
+      final d = DateTime.utc(
+        day.year,
+        day.month,
+        day.day,
       ).difference(start).inDays;
-      if (d >= 0 && d < n && !e.at.isAfter(now)) {
+      if (d >= 0 && d < period && !e.at.isAfter(now)) {
         result[d] += requests ? 1 : e.tokens.total.toDouble();
       }
     }
@@ -708,18 +708,22 @@ class AppController extends ChangeNotifier {
 
   Future<void> _checkAlerts() async {
     if (demo || !notifications || stale || !quotaValid) return;
-    for (final entry in [
-      MapEntry('当前窗口', account!.primary),
-      MapEntry('较长窗口', account!.secondary),
+    // Keep the stored window keys so upgrades do not repeat an earlier alert.
+    for (final (windowKey, label, w) in [
+      ('当前窗口', '当前窗口', account!.primary),
+      (
+        '较长窗口',
+        account!.secondary?.minutes == 10080 ? '本周窗口' : '5 小时窗口',
+        account!.secondary,
+      ),
     ]) {
-      final w = entry.value;
       if (w == null || w.expired(now) || w.remaining > threshold) continue;
       final key =
-          'alert:${profile.scope}:${entry.key}:${w.resets?.millisecondsSinceEpoch}:$threshold';
+          'alert:${profile.scope}:$windowKey:${w.resets?.millisecondsSinceEpoch}:$threshold';
       if (store.get(key) == true) continue;
       await NativeBridge.call('notify', {
         'id': key,
-        'title': strings.text('$providerLabel ${entry.key}额度提醒'),
+        'title': strings.text('$providerLabel $label额度提醒'),
         'body': strings.text(
           '剩余 ${w.remaining}%，${countdown(w.resets, now)}后重置。',
         ),

@@ -59,7 +59,7 @@ class UpdateCheckFailure implements Exception {
 }
 
 class AppUpdates {
-  static const repository = 'liuzilong200049-bot/QuotaMate';
+  static const repository = 'XianrenLong/QuotaMate';
   static final releases = Uri.https(
     'api.github.com',
     '/repos/$repository/releases',

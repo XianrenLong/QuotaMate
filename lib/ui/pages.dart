@@ -39,7 +39,7 @@ String money(UsageSummary s) {
   return cost == null ? '未配置单价' : '\$${cost.toStringAsFixed(2)}';
 }
 
-String weeklyLabel(QuotaWindow? w) => w?.minutes == 10080 ? '本周剩余' : '较长窗口剩余';
+String weeklyLabel(QuotaWindow? w) => w?.minutes == 10080 ? '本周剩余' : '5 小时窗口剩余';
 int? validRemaining(QuotaWindow? w, DateTime now) =>
     w == null || w.expired(now) ? null : w.remaining;
 
@@ -228,7 +228,7 @@ class _OverviewPageState extends State<OverviewPage> {
                   child: Column(
                     children: [
                       MiniHeading(
-                        '用量趋势',
+                        '用量趋势 · 近30天',
                         icon: LucideIcons.chartNoAxesCombined,
                         trailing: Segments(
                           ['Token', '记录数'],
@@ -238,7 +238,7 @@ class _OverviewPageState extends State<OverviewPage> {
                       ),
                       SizedBox(height: 22),
                       Expanded(
-                        child: c.events.isEmpty
+                        child: !c.hasTrendRecords
                             ? EmptyState(
                                 '还没有用量记录',
                                 c.isClaude
@@ -905,22 +905,18 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   padding: EdgeInsets.all(12),
                   child: Column(
                     children: [
-                      MiniHeading('每日用量', trailing: ChipLabel('Token')),
+                      MiniHeading('每日用量 · 近30天', trailing: ChipLabel('Token')),
                       SizedBox(height: 10),
                       Expanded(
-                        child: c.events.isEmpty
+                        child: !c.hasTrendRecords
                             ? EmptyState(
                                 '暂无统计',
                                 c.isClaude
                                     ? c.claudeEmptyUsageText
-                                    : '选择其他时间范围，或同步本机记录。',
+                                    : '最近30天没有本机用量记录。',
                                 onTap: c.isClaude ? () => c.navigate(4) : null,
                               )
-                            : UsageChart(
-                                c.values(),
-                                c.rangeEnd,
-                                showDates: false,
-                              ),
+                            : UsageChart(c.values(), c.now, showDates: false),
                       ),
                     ],
                   ),

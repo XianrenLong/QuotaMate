@@ -1,6 +1,6 @@
 # 订阅等级显示
 
-Claude 自 v0.1.19 使用独立计划命名空间：Free 灰色、Pro 蓝色、Max / Max X5 / Max X20 / Ultra 金色、Team / Enterprise 蓝色。仅在官方状态信息给出倍率时显示 X5 / X20，不猜测。Claude Pro 不触发 OpenAI Pro 的“隐藏较长窗口”规则；Claude 也不使用 GPT 的重置机会。以下表格与规则保留用于 GPT / Codex。
+Claude 自 v0.1.19 使用独立计划命名空间：Free 灰色、Pro 蓝色、Max / Max X5 / Max X20 / Ultra 金色、Team / Enterprise 蓝色。仅在官方状态信息给出倍率时显示 X5 / X20，不猜测。Claude Pro 不触发 OpenAI Pro 的“隐藏5 小时窗口”规则；Claude 也不使用 GPT 的重置机会。以下表格与规则保留用于 GPT / Codex。
 
 个人账号等级根据 Codex CLI App Server 的 planType 识别。查询到额度接口同时提供 planType 时优先采用该服务端结果，否则采用 account/read 的账号等级。
 
@@ -33,7 +33,7 @@ v0.1.23 补充检查发现：虽然 `account/read` 没有提供日期，Codex �
 
 只把日期和来源存入账号快照，原始凭证不写库、不输出、不上传、不被本软件用于发请求。缓存日期可能滞后，日期已过只提示待更新，不覆盖官方工具当前订阅等级，也不触发任何额度重置。隐私访问范围见 [SECURITY.md](../SECURITY.md)。
 
-总览：Pro 系列将原来的较长窗口卡片替换为今日用量记录；Plus 保留较长窗口。账号页同样采用此规则显示对应数据，账号列表和详情以彩色徽章显示订阅等级。非当前选中账号的等级来自该数据目录的已缓存快照，并标明历史状态。
+总览：Pro 系列将原来的5 小时窗口卡片替换为今日用量记录；Plus 保留5 小时窗口。账号页同样采用此规则显示对应数据，账号列表和详情以彩色徽章显示订阅等级。非当前选中账号的等级来自该数据目录的已缓存快照，并标明历史状态。
 
 等级仅为展示，不更改订阅或登录。Pro 当前没有五小时限额的说明见 [官方 Codex 价格与用量文档](https://learn.chatgpt.com/docs/pricing#what-are-the-usage-limits-for-my-plan)。本机协议 enum 来自 Codex CLI 导出的 GetAccountResponse，核对日期 2026-11-01。
 
