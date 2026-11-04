@@ -1,7 +1,7 @@
 <p align="center"><img src="assets/branding/quotamate-hourglass.png" width="96" height="96" alt="QuotaMate hourglass"></p>
 <h1 align="center">QuotaMate</h1>
 <p align="center"><strong>Your local AI usage, clearly.</strong></p>
-<p align="center">A macOS and Windows dashboard for GPT / Codex and Claude Code usage, cache, and reference costs.</p>
+<p align="center">Track GPT / Codex and Claude quotas from the macOS menu bar or Windows tray, then explore local token usage and estimated costs.</p>
 <p align="center">
   <a href="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/version-0.1.30%20Alpha-3b82f6?style=flat-square" alt="0.1.30 Alpha">
@@ -9,11 +9,11 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
 </p>
 <p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="Download the universal macOS DMG"></a> <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-windows-x64-setup.exe"><img src="docs/assets/download-windows.svg" width="320" alt="Download the Windows x64 installer"></a></p>
-<p align="center"><a href="#download">Download</a> · <a href="#first-run">First run</a> · <a href="#connect-gpt">GPT / Codex</a> · <a href="#connect-claude">Claude</a> · <a href="#faq">FAQ</a> · <a href="README.md">简体中文</a></p>
+<p align="center"><a href="#download">Download</a> · <a href="#quick-view">Quick view</a> · <a href="#first-run">First run</a> · <a href="#connect-gpt">GPT / Codex</a> · <a href="#connect-claude">Claude</a> · <a href="#faq">FAQ</a> · <a href="README.md">简体中文</a></p>
 
 ![Claude statistics with synthetic seven-day data](screenshots/preview/statistics-claude-dark-en.png)
 
-All previews use production Flutter components with synthetic accounts, fictional paths, and fake usage. They are not evidence of a real account connection. The app starts on Today; previews can use the seven-day range to show a fuller trend.
+Previews use production UI components with synthetic accounts, fictional paths, and fake usage. They are not evidence of a real account connection. The app starts on Today; previews can use the seven-day range to show a fuller trend.
 
 ## What you can see
 
@@ -23,6 +23,17 @@ All previews use production Flutter components with synthetic accounts, fictiona
 
 > [!IMPORTANT]
 > QuotaMate reads supported **local records**. It does not synchronize the full token history of regular ChatGPT or Claude web/desktop chat, and it does not provide model chat. Claude uses passive local collection, not subscription-limit polling.
+
+<a id="quick-view"></a>
+
+## Open the quick view
+
+<p align="center"><img src="screenshots/preview/quick-view-en.png" width="340" alt="QuotaMate quick view showing remaining quota, reset forecasts and hourly usage"></p>
+<p align="center"><sub>macOS quick view with demo data</sub></p>
+
+1. Launch QuotaMate and click the hourglass in the macOS menu bar. On Windows, single-click its tray icon, under hidden icons if needed.
+2. Choose **GPT** or **Claude** at the top. Read the remaining percentage and reset time for each available window. Click the circular arrow to refresh. Forecasts appear once the same account and window have two eligible samples at least 10 minutes apart.
+3. Under **Today**, check tokens, estimated cost and cache hits. The bars show the last 12 hours. Click **Open QuotaMate** for individual usage records.
 
 <a id="download"></a>
 

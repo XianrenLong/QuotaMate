@@ -3,7 +3,7 @@
 </p>
 <h1 align="center">QuotaMate</h1>
 <p align="center"><strong>用量、缓存、参考成本，一眼看清。</strong></p>
-<p align="center">适用于 macOS / Windows 的 GPT、Codex 与 Claude Code 本机用量面板。</p>
+<p align="center">从 macOS 菜单栏或 Windows 托盘查看 GPT / Codex 与 Claude 额度，在主窗口查看本机 Token 用量和成本估算。</p>
 <p align="center">
   <a href="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/version-0.1.30%20Alpha-3b82f6?style=flat-square" alt="0.1.30 Alpha">
@@ -16,7 +16,7 @@
   <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-windows-x64-setup.exe"><img src="docs/assets/download-windows.svg" width="320" alt="直接下载 Windows x64 安装程序"></a>
 </p>
 <p align="center">
-  <a href="#download">下载安装</a> · <a href="#first-run">第一次使用</a> · <a href="#connect-gpt">连接 GPT</a> · <a href="#connect-claude">连接 Claude</a> · <a href="#faq">常见问题</a> · <a href="README.en.md">English</a>
+  <a href="#download">下载安装</a> · <a href="#quick-view">速览弹窗</a> · <a href="#first-run">第一次使用</a> · <a href="#connect-gpt">连接 GPT</a> · <a href="#connect-claude">连接 Claude</a> · <a href="#faq">常见问题</a> · <a href="README.en.md">English</a>
 </p>
 
 <picture>
@@ -34,6 +34,17 @@
 
 > [!IMPORTANT]
 > **QuotaMate 统计的是支持的本机记录。** 它不会把 ChatGPT 或 Claude 网页、普通桌面聊天的全部历史同步进来；也不提供模型对话服务。Claude 当前采用本地被动采集，不主动轮询订阅额度接口。
+
+<a id="quick-view"></a>
+
+## 打开速览弹窗
+
+<p align="center"><img src="screenshots/preview/quick-view-zh.png" width="340" alt="速览弹窗显示剩余额度、重置倒计时、消耗预测和按小时用量"></p>
+<p align="center"><sub>macOS 速览弹窗 · 演示数据</sub></p>
+
+1. 启动 QuotaMate。Mac 上单击屏幕顶部菜单栏的沙漏，Windows 上单击任务栏右侧的 QuotaMate 托盘图标。如果图标被收起，先展开隐藏图标。
+2. 在弹窗顶部选择 **GPT** 或 **Claude**，查看各额度窗口的剩余百分比和重置时间。右侧圆箭头可刷新数据。同一账号、同一额度周期有两次相隔至少 10 分钟的有效采样后，才会显示消耗预测。
+3. 在「今日」查看 Token、成本估算和缓存命中率。下方柱状图显示最近 12 小时的用量。要看逐条记录，点左下角「打开主窗口」。
 
 <a id="download"></a>
 
