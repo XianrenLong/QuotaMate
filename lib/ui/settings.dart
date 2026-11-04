@@ -46,7 +46,7 @@ class AlertsPage extends StatelessWidget {
                         label('剩余额度阈值', weight: FontWeight.w500),
                         SizedBox(height: 5),
                         label(
-                          '当前窗口和较长窗口分别判断。',
+                          '每个额度窗口单独判断。',
                           size: 12,
                           color: themeColor(context, C.muted),
                         ),
@@ -179,7 +179,7 @@ class AlertsPage extends StatelessWidget {
   );
 }
 
-String weeklyLabel(QuotaWindow? w) => w?.minutes == 10080 ? '本周窗口' : '较长窗口';
+String weeklyLabel(QuotaWindow? w) => w?.minutes == 10080 ? '本周窗口' : '5 小时窗口';
 Widget settingRow(
   String title,
   String caption, {

@@ -6,7 +6,7 @@
 
 ## 报告漏洞
 
-请使用 GitHub 的 [私密漏洞报告](https://github.com/liuzilong200049-bot/QuotaMate/security/advisories/new)。若该入口不可用，可在公开 Issue 中只请求私密联系渠道，不要附敏感细节。
+请使用 GitHub 的 [私密漏洞报告](https://github.com/XianrenLong/QuotaMate/security/advisories/new)。若该入口不可用，可在公开 Issue 中只请求私密联系渠道，不要附敏感细节。
 
 提供受影响版本、操作系统、影响说明和使用合成数据的最小复现。不要上传账号令牌、Cookie、`auth.json`、钥匙串内容、真实会话日志或完整用量数据库。截图也可能包含邮箱和项目路径，提交前请检查。
 

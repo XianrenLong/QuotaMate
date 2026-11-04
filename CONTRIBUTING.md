@@ -47,7 +47,7 @@ Python 测试发现命令会跳过未提供可执行文件的原生采集器测�
 
 描述具体问题、最终行为和验证结果。界面变化请附合成数据截图，并检查中英文、浅色/深色以及紧凑窗口。新增依赖或引入参考代码时说明用途、来源和许可证。
 
-安全问题通过 [私密漏洞报告](https://github.com/liuzilong200049-bot/QuotaMate/security/advisories/new) 联系维护者，不要创建包含真实凭证的公开 Issue。详情见 [SECURITY.md](SECURITY.md)。
+安全问题通过 [私密漏洞报告](https://github.com/XianrenLong/QuotaMate/security/advisories/new) 联系维护者，不要创建包含真实凭证的公开 Issue。详情见 [SECURITY.md](SECURITY.md)。
 
 ## 主分支保护
 

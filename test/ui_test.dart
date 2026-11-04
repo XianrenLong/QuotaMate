@@ -6,6 +6,7 @@ import 'package:quota_mate/controller.dart';
 import 'package:quota_mate/data/store.dart';
 import 'package:quota_mate/data/models.dart';
 import 'package:quota_mate/ui/app.dart';
+import 'package:quota_mate/ui/widgets.dart';
 import 'package:quota_mate/ui/usage_details_table.dart';
 
 void main() {
@@ -31,9 +32,13 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('GPT'), findsOneWidget);
       expect(find.byType(UsageDetailsTable), findsOneWidget);
+      final trend = find.byWidgetPredicate((w) => w is UsageChart && !w.mini);
+      final baseline = tester.widget<UsageChart>(trend).values;
+      expect(baseline, hasLength(30));
       await tester.tap(find.text('近7天'));
       await tester.pumpAndSettle();
       expect(c.days, 7);
+      expect(tester.widget<UsageChart>(trend).values, baseline);
       await tester.tap(find.text('今日'));
       await tester.pumpAndSettle();
       expect(c.days, 1);
@@ -65,6 +70,7 @@ void main() {
       c.navigate(1);
       await tester.pumpAndSettle();
       expect(find.text('62%'), findsOneWidget);
+      expect(tester.widget<UsageChart>(trend).values, baseline);
       await tester.tap(find.text('记录数'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -80,7 +86,7 @@ void main() {
         c.navigate(1);
         await tester.pumpAndSettle();
         expect(find.text('今日用量记录'), findsOneWidget);
-        expect(find.text('较长窗口剩余'), findsNothing);
+        expect(find.text('5 小时窗口剩余'), findsNothing);
         c.navigate(2);
         await tester.pumpAndSettle();
         expect(find.text(c.planName), findsWidgets);

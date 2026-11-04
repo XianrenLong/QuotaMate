@@ -3,17 +3,19 @@
 <p align="center"><strong>Your local AI usage, clearly.</strong></p>
 <p align="center">Track GPT / Codex and Claude quotas from the macOS menu bar or Windows tray, then explore local token usage and estimated costs.</p>
 <p align="center">
-  <a href="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/liuzilong200049-bot/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/version-0.1.30%20Alpha-3b82f6?style=flat-square" alt="0.1.30 Alpha">
+  <a href="https://github.com/XianrenLong/QuotaMate/actions/workflows/ci.yml"><img src="https://github.com/XianrenLong/QuotaMate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/version-0.1.31%20Alpha-3b82f6?style=flat-square" alt="0.1.31 Alpha">
   <img src="https://img.shields.io/badge/macOS-12%2B-334155?style=flat-square" alt="macOS 12+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
 </p>
-<p align="center"><a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="Download the universal macOS DMG"></a> <a href="https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-windows-x64-setup.exe"><img src="docs/assets/download-windows.svg" width="320" alt="Download the Windows x64 installer"></a></p>
+<p align="center"><a href="https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-macos-universal.dmg"><img src="docs/assets/download-macos.svg" width="320" alt="Download the universal macOS DMG"></a> <a href="https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-windows-x64-setup.exe"><img src="docs/assets/download-windows.svg" width="320" alt="Download the Windows x64 installer"></a></p>
 <p align="center"><a href="#download">Download</a> · <a href="#quick-view">Quick view</a> · <a href="#first-run">First run</a> · <a href="#connect-gpt">GPT / Codex</a> · <a href="#connect-claude">Claude</a> · <a href="#faq">FAQ</a> · <a href="README.md">简体中文</a></p>
 
 ![Claude statistics with synthetic seven-day data](screenshots/preview/statistics-claude-dark-en.png)
 
 Previews use production UI components with synthetic accounts, fictional paths, and fake usage. They are not evidence of a real account connection. The app starts on Today; previews can use the seven-day range to show a fuller trend.
+
+Daily usage in Statistics and the trend in Overview always cover the last 30 days. Use the period selector to filter totals and individual records.
 
 ## What you can see
 
@@ -39,19 +41,19 @@ Previews use production UI components with synthetic accounts, fictional paths, 
 
 ## Download and install
 
-**v0.1.30 Alpha · macOS 12+ universal / Windows x64.** The original Codex / Claude tools may have higher system requirements.
+**v0.1.31 Alpha · macOS 12+ universal / Windows x64.** The original Codex / Claude tools may have higher system requirements.
 
 Click the macOS menu bar hourglass or Windows tray icon to see remaining quota, reset times and today’s usage.
 
 | Package | Use | Direct link |
 | --- | --- | --- |
-| **Windows x64 installer** | Install for the current user | **[Download EXE](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-windows-x64-setup.exe)** |
-| Windows x64 portable ZIP | Extract the complete folder, then run quota_mate.exe | [Download ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-windows-x64.zip) |
-| Windows SHA256 | Verify Windows downloads | [Checksums](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/SHA256SUMS-windows) |
-| **DMG** | Recommended for most users | **[Download DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-macos-universal.dmg)** |
-| ZIP | Extract and move the app manually | [Download ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-macos-universal.zip) |
-| SHA256 checksums | Verify file consistency | [Download SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/SHA256SUMS) |
-| Release notes | Changes and limitations | [View release](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.30-alpha) |
+| **Windows x64 installer** | Install for the current user | **[Download EXE](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-windows-x64-setup.exe)** |
+| Windows x64 portable ZIP | Extract the complete folder, then run quota_mate.exe | [Download ZIP](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-windows-x64.zip) |
+| Windows SHA256 | Verify Windows downloads | [Checksums](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/SHA256SUMS-windows) |
+| **DMG** | Recommended for most users | **[Download DMG](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-macos-universal.dmg)** |
+| ZIP | Extract and move the app manually | [Download ZIP](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-macos-universal.zip) |
+| SHA256 checksums | Verify file consistency | [Download SHA256SUMS](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/SHA256SUMS) |
+| Release notes | Changes and limitations | [View release](https://github.com/XianrenLong/QuotaMate/releases/tag/v0.1.31-alpha) |
 
 **Windows:** use the installer, or extract the complete ZIP and run `quota_mate.exe`. Native Windows clients are the first target; WSL is separate. [Windows guide](docs/windows.md).
 
@@ -179,7 +181,7 @@ Quit QuotaMate before replacing it with a new version. Local data lives in `~/Li
 
 ## Help and development
 
-[Detailed walkthrough (中文)](docs/quick-start.md) · [Report a problem](https://github.com/liuzilong200049-bot/QuotaMate/issues/new/choose) · [Private security report](https://github.com/liuzilong200049-bot/QuotaMate/security/advisories/new)
+[Detailed walkthrough (中文)](docs/quick-start.md) · [Report a problem](https://github.com/XianrenLong/QuotaMate/issues/new/choose) · [Private security report](https://github.com/XianrenLong/QuotaMate/security/advisories/new)
 
 Remove personal information from reports. Do not upload raw logs, databases, credentials, or screenshots showing real account details.
 
@@ -189,7 +191,7 @@ Remove personal information from reports. Do not upload raw logs, databases, cre
 Baseline: Flutter **3.47.7** / Dart **3.13.5**, macOS, Xcode. Python 3 is only for development and release checks.
 
 ```sh
-git clone https://github.com/liuzilong200049-bot/QuotaMate.git
+git clone https://github.com/XianrenLong/QuotaMate.git
 cd QuotaMate
 flutter pub get --enforce-lockfile
 flutter run -d macos

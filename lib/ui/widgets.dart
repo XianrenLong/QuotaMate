@@ -454,15 +454,10 @@ class UsageChart extends StatelessWidget {
                     i > values.length - 5) {
                   return SizedBox.shrink();
                 }
-                final d = DateTime(
-                  now.year,
-                  now.month,
-                  now.day,
-                ).subtract(Duration(days: values.length - 1 - i));
                 return Padding(
                   padding: EdgeInsets.only(top: 9),
                   child: label(
-                    '${d.month}/${d.day}',
+                    _dateFor(i),
                     size: 10,
                     color: themeColor(context, C.muted),
                   ),
@@ -496,11 +491,7 @@ class UsageChart extends StatelessWidget {
 
   String _dateFor(int index) {
     final i = index.clamp(0, math.max(0, values.length - 1)).toInt();
-    final d = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(Duration(days: values.length - 1 - i));
+    final d = DateTime(now.year, now.month, now.day - values.length + 1 + i);
     return '${d.month}/${d.day}';
   }
 }

@@ -2,7 +2,7 @@
 
 **Windows 用户请先看 [Windows 使用指南](windows.md)。以下安装步骤适用于 macOS。**
 
-[返回项目首页](../README.md) · [直接下载 macOS DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-macos-universal.dmg) · [版本说明](https://github.com/liuzilong200049-bot/QuotaMate/releases/tag/v0.1.30-alpha)
+[返回项目首页](../README.md) · [直接下载 macOS DMG](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-macos-universal.dmg) · [版本说明](https://github.com/XianrenLong/QuotaMate/releases/tag/v0.1.31-alpha)
 
 这份指南面向第一次安装的用户。QuotaMate 用于整理支持的本机 AI 用量，不提供模型对话，也不会因登录就同步所有云端聊天历史。
 
@@ -21,10 +21,10 @@
 
 ## 下载与安装
 
-1. 点击 **[直接下载 DMG](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-macos-universal.dmg)**，保存到下载文件夹。
+1. 点击 **[直接下载 DMG](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-macos-universal.dmg)**，保存到下载文件夹。
 2. 双击打开 DMG，将 **QuotaMate** 拖到 **Applications / 应用程序**。
 3. 从「应用程序」启动；若已安装旧版，先退出旧版再替换。
-4. 不想使用 DMG 时，可 [下载 ZIP](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/QuotaMate-0.1.30-macos-universal.zip)，解压后把 `QuotaMate.app` 放到「应用程序」。
+4. 不想使用 DMG 时，可 [下载 ZIP](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-macos-universal.zip)，解压后把 `QuotaMate.app` 放到「应用程序」。
 
 安装包是 Alpha 开发测试包，仅有 ad-hoc 本地签名，未使用 Apple Developer ID 签名或公证。是否运行由你自行决定。
 
@@ -38,10 +38,10 @@
 
 ### 可选：检查下载是否完整
 
-将 [SHA256SUMS](https://github.com/liuzilong200049-bot/QuotaMate/releases/download/v0.1.30-alpha/SHA256SUMS) 与下载文件放在同一目录。在终端进入该目录后执行：
+将 [SHA256SUMS](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/SHA256SUMS) 与下载文件放在同一目录。在终端进入该目录后执行：
 
 ```sh
-shasum -a 256 QuotaMate-0.1.30-macos-universal.dmg
+shasum -a 256 QuotaMate-0.1.31-macos-universal.dmg
 ```
 
 将输出与 `SHA256SUMS` 中同名文件的值比较。若同时下载了 DMG 和 ZIP，也可执行 `shasum -a 256 -c SHA256SUMS` 一次检查两者；只下载一个时，完整清单会提示另一个文件缺失。校验值仅用于检查文件一致性，不等于 Apple 公证或安全认证。
@@ -137,7 +137,7 @@ QuotaMate 不要求你提供订阅令牌、Cookie 或授权码，也不会保存
 5. **是否开启本机汇总？** 在 **账号 → 同步设置 → 汇总本机用量** 中确认开启，再点击刷新。
 6. **是否有错误提示？** 若提示工具不可用，核对可执行路径；若部分文件暂未读取，其他已导入记录仍会保留。
 
-仍无数据时，到 [Issue 模板](https://github.com/liuzilong200049-bot/QuotaMate/issues/new/choose) 提供版本、macOS / 芯片、所用客户端、复现步骤及脱敏截图。不要上传真实日志、数据库、邮箱或令牌。
+仍无数据时，到 [Issue 模板](https://github.com/XianrenLong/QuotaMate/issues/new/choose) 提供版本、macOS / 芯片、所用客户端、复现步骤及脱敏截图。不要上传真实日志、数据库、邮箱或令牌。
 
 ## 自动显示订阅日期
 
