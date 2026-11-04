@@ -215,3 +215,5 @@ The public-file check reads the Git index; stage intended public files first. Se
 [MIT](LICENSE) for the project's own code and resources. [Third-party notices](THIRD_PARTY_NOTICES.md) · [Changelog](CHANGELOG.md) · [Artwork provenance](docs/branding.md)
 
 UI styling was inspired by FlClash without importing its UI source or proxy engine. Timing logic references CC Switch with its MIT notice retained. This independent project is not affiliated with or endorsed by OpenAI, Anthropic, or FlClash.
+
+Community link: [LINUX DO](https://linux.do/).

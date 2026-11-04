@@ -265,4 +265,6 @@ bash scripts/package_macos.sh
 
 视觉风格参考 [FlClash](https://github.com/chen08209/FlClash)，日志计时参考 [CC Switch](https://github.com/farion1231/cc-switch) 并保留 MIT 声明；未引入 FlClash 的界面源码或代理内核。QuotaMate 与 OpenAI、Anthropic、FlClash 无官方隶属或背书关系。
 
+友情链接：[LINUX DO](https://linux.do/)。
+
 <p align="center"><a href="https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.31-alpha/QuotaMate-0.1.31-macos-universal.dmg"><strong>下载 QuotaMate for macOS →</strong></a></p>
