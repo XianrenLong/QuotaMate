@@ -422,6 +422,19 @@ class UsageChart extends StatelessWidget {
         ),
         lineTouchData: LineTouchData(
           enabled: !mini,
+          getTouchedSpotIndicator: (bar, indexes) => [
+            for (final _ in indexes)
+              TouchedSpotIndicatorData(
+                FlLine(color: bar.color, strokeWidth: 1),
+                FlDotData(
+                  getDotPainter: (_, _, _, _) => FlDotCirclePainter(
+                    radius: 3,
+                    color: themeColor(context, C.blue),
+                    strokeWidth: 0,
+                  ),
+                ),
+              ),
+          ],
           touchCallback: onSelectDay == null
               ? null
               : (event, response) {
@@ -431,6 +444,8 @@ class UsageChart extends StatelessWidget {
                   }
                 },
           touchTooltipData: LineTouchTooltipData(
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
             getTooltipColor: (_) => themeColor(context, C.blue),
             getTooltipItems: (spots) => spots
                 .map(
@@ -499,7 +514,7 @@ class UsageChart extends StatelessWidget {
             color: themeColor(context, C.blue),
             barWidth: mini ? 1.7 : 2.3,
             isStrokeCapRound: true,
-            dotData: FlDotData(show: !mini),
+            dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
               color: themeColor(
