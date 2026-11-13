@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 
 import 'app_info.dart';
@@ -47,6 +49,8 @@ class AppController extends ChangeNotifier {
       quotaEnabled = true,
       autoRefresh = true,
       notifications = false;
+  bool recoveryNotifications = false;
+  static const _recoveryKey = 'quota:pending-recoveries';
   bool readSubscriptionDates = true;
   bool closeToTray = false, launchAtLogin = false, startupBusy = false;
   bool checkingConnection = false, checkingUpdates = false;
@@ -92,6 +96,7 @@ class AppController extends ChangeNotifier {
     quotaEnabled = s['quotaEnabled'] != false;
     autoRefresh = s['autoRefresh'] != false;
     notifications = s['notifications'] == true;
+    recoveryNotifications = s['recoveryNotifications'] == true;
     readSubscriptionDates = s['readSubscriptionDates'] != false;
     closeToTray = s['closeToTray'] == true;
     automaticUpdateChecks = s['automaticUpdateChecks'] != false;
@@ -664,6 +669,7 @@ class AppController extends ChangeNotifier {
       if (result.account != null) {
         account = result.account;
         store.set('quota:$root', account!.toJson());
+        await _checkAlerts();
       }
       message = switch (result.outcome) {
         QuotaResetOutcome.reset => '额度已重置。',
@@ -707,28 +713,110 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _checkAlerts() async {
-    if (demo || !notifications || stale || !quotaValid) return;
-    // Keep the stored window keys so upgrades do not repeat an earlier alert.
-    for (final (windowKey, label, w) in [
-      ('当前窗口', '当前窗口', account!.primary),
-      (
-        '较长窗口',
-        account!.secondary?.minutes == 10080 ? '本周窗口' : '5 小时窗口',
-        account!.secondary,
-      ),
-    ]) {
-      if (w == null || w.expired(now) || w.remaining > threshold) continue;
-      final key =
-          'alert:${profile.scope}:$windowKey:${w.resets?.millisecondsSinceEpoch}:$threshold';
-      if (store.get(key) == true) continue;
-      await NativeBridge.call('notify', {
-        'id': key,
-        'title': strings.text('$providerLabel $label额度提醒'),
-        'body': strings.text(
-          '剩余 ${w.remaining}%，${countdown(w.resets, now)}后重置。',
-        ),
-      });
+    final snapshot = account;
+    if (demo ||
+        !notifications ||
+        stale ||
+        isClaude ||
+        snapshot == null ||
+        snapshot.authMode != 'chatgpt') {
+      return;
+    }
+    final email = snapshot.email?.trim().toLowerCase() ?? '';
+    for (final secondary in [false, true]) {
+      final window = secondary ? snapshot.secondary : snapshot.primary;
+      if (_disposed || demo || !notifications || !quotaEnabled) return;
+      if (window == null || window.expired(now)) continue;
+      final id = sha256
+          .convert(
+            utf8.encode(
+              jsonEncode([profile.scope, email, secondary, window.minutes]),
+            ),
+          )
+          .toString();
+      final label = quotaWindowLabel(window, secondary: secondary);
+      final reset = window.resets?.millisecondsSinceEpoch;
+      final lowKey = 'quota-low:$id:$threshold:$reset';
+      if (window.remaining <= threshold) {
+        if (recoveryNotifications && email.isNotEmpty) {
+          final pending = store.get(_recoveryKey) as Map? ?? {};
+          final at = snapshot.observed.millisecondsSinceEpoch;
+          final previous = pending[id] as int?;
+          if (previous == null || at > previous) {
+            pending[id] = at;
+            store.set(_recoveryKey, pending);
+          }
+        }
+        final legacySlot = secondary ? '较长窗口' : '当前窗口';
+        final legacyKey =
+            'alert:${profile.scope}:$legacySlot:$reset:$threshold';
+        await _lowAlert(window, label, lowKey, legacyKey);
+      } else {
+        // With no reported reset time, re-arm after an observed recovery.
+        if (reset == null && store.get(lowKey) == true) store.set(lowKey, null);
+        if (recoveryNotifications) {
+          await _recoveryAlert(id, label, window.remaining, snapshot.observed);
+        }
+      }
+    }
+  }
+
+  Future<void> _lowAlert(
+    QuotaWindow window,
+    String label,
+    String key,
+    String legacyKey,
+  ) async {
+    if (store.get(key) == true) return;
+    // Adopt a pre-upgrade alert once. Older records have no account ID.
+    if (store.get(legacyKey) == true) {
       store.set(key, true);
+      store.set(legacyKey, null);
+      return;
+    }
+    final body = window.resets == null
+        ? '${window.remaining}% 剩余'
+        : '剩余 ${window.remaining}%，${countdown(window.resets, now)}后重置。';
+    if (await _sendAlert(key, '$providerLabel $label额度提醒', body) &&
+        !_disposed) {
+      store.set(key, true);
+    }
+  }
+
+  Future<void> _recoveryAlert(
+    String id,
+    String label,
+    int remaining,
+    DateTime observed,
+  ) async {
+    final pending = store.get(_recoveryKey) as Map?;
+    final lowAt = pending?[id];
+    if (lowAt is! int || observed.millisecondsSinceEpoch <= lowAt) return;
+    final sent = await _sendAlert(
+      'quota-recovery:$id:$lowAt',
+      '$providerLabel $label额度已恢复',
+      '剩余额度已回升至 $remaining%。',
+    );
+    if (!sent || _disposed) return;
+    // Settings can clear pending alerts while the OS handles the request.
+    final current = store.get(_recoveryKey) as Map?;
+    if (current != null && current[id] == lowAt) {
+      current.remove(id);
+      store.set(_recoveryKey, current);
+    }
+  }
+
+  Future<bool> _sendAlert(String id, String title, String body) async {
+    try {
+      final accepted = await NativeBridge.call<bool>('notify', {
+        'id': id,
+        'title': strings.text(title),
+        'body': strings.text(body),
+      });
+      return accepted == true;
+    } on PlatformException {
+      // Notification delivery can be retried independently of the quota read.
+      return false;
     }
   }
 
@@ -931,6 +1019,7 @@ class AppController extends ChangeNotifier {
       'quotaEnabled': quotaEnabled,
       'autoRefresh': autoRefresh,
       'notifications': notifications,
+      'recoveryNotifications': recoveryNotifications,
       'readSubscriptionDates': readSubscriptionDates,
       'closeToTray': closeToTray,
       'updateChannel': updateChannel.name,
@@ -1171,8 +1260,22 @@ class AppController extends ChangeNotifier {
     } else {
       notifications = false;
     }
+    if (!notifications) store.set(_recoveryKey, {});
     save();
     _notify();
+  }
+
+  void setRecoveryNotifications(bool enabled) => setting(() {
+    recoveryNotifications = enabled;
+    if (!enabled) store.set(_recoveryKey, {});
+  });
+
+  void setAlertThreshold(int value) {
+    if (value == threshold) return;
+    setting(() {
+      threshold = value;
+      store.set(_recoveryKey, {});
+    });
   }
 
   void addPrice(ModelPrice price) {

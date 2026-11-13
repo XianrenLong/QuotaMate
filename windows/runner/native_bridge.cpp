@@ -256,8 +256,9 @@ void NativeBridge::HandleCall(const flutter::MethodCall<EncodableValue>& call,
     wcsncpy_s(tray_.szInfo, Wide(Argument(args, "body")).c_str(), _TRUNCATE);
     tray_.dwInfoFlags = NIIF_INFO;
     tray_.uFlags = NIF_INFO;
-    Shell_NotifyIconW(NIM_MODIFY, &tray_);
+    const bool submitted = Shell_NotifyIconW(NIM_MODIFY, &tray_) != FALSE;
     tray_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    result->Success(EncodableValue(submitted)); return;
   } else { result->NotImplemented(); return; }
   result->Success();
 }
