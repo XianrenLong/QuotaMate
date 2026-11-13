@@ -6,10 +6,49 @@ import 'package:quota_mate/controller.dart';
 import 'package:quota_mate/data/store.dart';
 import 'package:quota_mate/data/models.dart';
 import 'package:quota_mate/ui/app.dart';
+import 'package:quota_mate/ui/pages.dart';
 import 'package:quota_mate/ui/widgets.dart';
 import 'package:quota_mate/ui/usage_details_table.dart';
 
 void main() {
+  testWidgets(
+    'sidebar toggles preserve the overview chart and lay it out at its final width',
+    (tester) async {
+      final dir = Directory.systemTemp.createTempSync('quota-sidebar-');
+      final c = AppController(
+        LocalStore('${dir.path}/test.db'),
+        forceDemo: true,
+      )..navigate(1);
+      tester.view.physicalSize = const Size(1000, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        c.dispose();
+        dir.deleteSync(recursive: true);
+        tester.view.reset();
+      });
+      await tester.pumpWidget(QuotaMateApp(controller: c));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('记录数'));
+      await tester.pumpAndSettle();
+      final overview = find.byType(OverviewPage);
+      final width = tester.getSize(overview).width;
+      final trend = find.byWidgetPredicate(
+        (w) => w is UsageChart && w.requests,
+      );
+      final chart = tester.widget<UsageChart>(trend);
+      for (final (button, expectedWidth) in [
+        ('收起侧栏', width + 132),
+        ('展开侧栏', width),
+      ]) {
+        await tester.tap(find.byTooltip(button));
+        await tester.pump();
+        expect(tester.getSize(overview).width, expectedWidth);
+        await tester.pumpAndSettle();
+        expect(tester.widget<UsageChart>(trend), same(chart));
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
   for (final size in [const Size(1320, 850), const Size(1000, 720)]) {
     testWidgets('all pages and filters render without overflow at $size', (
       tester,
