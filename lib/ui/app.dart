@@ -48,26 +48,13 @@ class QuotaMateApp extends StatelessWidget {
   );
 }
 
-class AppShell extends StatefulWidget {
+const _pageNames = ['统计', '总览', '账号', '提醒', '设置'];
+
+class AppShell extends StatelessWidget {
   final AppController c;
   const AppShell(this.c, {super.key});
   @override
-  State<AppShell> createState() => _AppShellState();
-}
-
-class _AppShellState extends State<AppShell> {
-  bool collapsed = false;
-  static const names = ['统计', '总览', '账号', '提醒', '设置'];
-  static const icons = [
-    LucideIcons.chartNoAxesCombined,
-    LucideIcons.layoutGrid,
-    LucideIcons.userRound,
-    LucideIcons.bell,
-    LucideIcons.settings,
-  ];
-  @override
   Widget build(BuildContext context) {
-    final c = widget.c;
     return AnimatedBuilder(
       animation: c,
       builder: (context, _) => CallbackShortcuts(
@@ -133,211 +120,7 @@ class _AppShellState extends State<AppShell> {
                 Expanded(
                   child: Row(
                     children: [
-                      AnimatedContainer(
-                        duration: Duration(milliseconds: 170),
-                        width: collapsed ? 70 : 202,
-                        decoration: BoxDecoration(
-                          color: themeColor(context, C.side),
-                          border: Border(
-                            right: BorderSide(
-                              color: themeColor(context, Color(0xFFDAD8E2)),
-                              width: .5,
-                            ),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(
-                                left: 16,
-                                top: 8,
-                                bottom: 19,
-                              ),
-                              child: IconButton(
-                                tooltip: AppLocale.text(
-                                  context,
-                                  collapsed ? '展开侧栏' : '收起侧栏',
-                                ),
-                                onPressed: () =>
-                                    setState(() => collapsed = !collapsed),
-                                icon: Icon(
-                                  LucideIcons.panelLeft,
-                                  size: 18,
-                                  color: themeColor(context, C.muted),
-                                ),
-                              ),
-                            ),
-                            for (var i = 0; i < names.length; i++)
-                              Padding(
-                                padding: EdgeInsets.fromLTRB(10, 0, 10, 7),
-                                child: Semantics(
-                                  selected: c.page == i,
-                                  button: true,
-                                  label: AppLocale.text(context, names[i]),
-                                  child: Material(
-                                    color: c.page == i
-                                        ? themeColor(context, Color(0xFFD8D6E1))
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(12),
-                                      onTap: () => c.navigate(i),
-                                      child: Container(
-                                        height: 45,
-                                        decoration: BoxDecoration(
-                                          border: c.page == i
-                                              ? Border(
-                                                  left: BorderSide(
-                                                    color: themeColor(
-                                                      context,
-                                                      C.blue,
-                                                    ),
-                                                    width: 3,
-                                                  ),
-                                                )
-                                              : null,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: collapsed ? 11 : 16,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              icons[i],
-                                              size: 20,
-                                              color: themeColor(context, C.ink),
-                                            ),
-                                            if (!collapsed) ...[
-                                              SizedBox(width: 14),
-                                              Expanded(
-                                                child: label(
-                                                  names[i],
-                                                  weight: c.page == i
-                                                      ? FontWeight.w600
-                                                      : FontWeight.w400,
-                                                ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            Spacer(),
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                collapsed ? 4 : 18,
-                                0,
-                                collapsed ? 4 : 10,
-                                20,
-                              ),
-                              child: LayoutBuilder(
-                                builder: (context, box) {
-                                  final compact =
-                                      collapsed || box.maxWidth < 135;
-                                  final storage = InkWell(
-                                    onTap: () => c.navigate(4),
-                                    child: SizedBox(
-                                      height: 36,
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            LucideIcons.hardDrive,
-                                            size: 18,
-                                            color: themeColor(context, C.muted),
-                                          ),
-                                          if (!compact) ...[
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: label(
-                                                '本地保存',
-                                                size: 12,
-                                                color: themeColor(
-                                                  context,
-                                                  C.muted,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                  final update = c.availableUpdate;
-                                  final download = update == null
-                                      ? null
-                                      : Tooltip(
-                                          message:
-                                              '${c.strings.text("下载更新")} ${update.tag}',
-                                          child: SizedBox(
-                                            width: compact ? 34 : 62,
-                                            height: 34,
-                                            child: TextButton(
-                                              key: const ValueKey(
-                                                'sidebar-update',
-                                              ),
-                                              onPressed: () =>
-                                                  NativeBridge.call('openUrl', {
-                                                    'url':
-                                                        (update.download ??
-                                                                update.page)
-                                                            .toString(),
-                                                  }),
-                                              style: TextButton.styleFrom(
-                                                backgroundColor: themeColor(
-                                                  context,
-                                                  C.blue,
-                                                ).withValues(alpha: .12),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 5,
-                                                    ),
-                                              ),
-                                              child: FittedBox(
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    const Icon(
-                                                      LucideIcons.download,
-                                                      size: 15,
-                                                    ),
-                                                    if (!compact) ...[
-                                                      const SizedBox(width: 3),
-                                                      const LocalizedText('更新'),
-                                                    ],
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                  if (compact) {
-                                    return Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [storage, ?download],
-                                    );
-                                  }
-                                  return Row(
-                                    children: [
-                                      Expanded(child: storage),
-                                      ?download,
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      _Sidebar(c),
                       Expanded(
                         child: Padding(
                           padding: EdgeInsets.fromLTRB(22, 0, 22, 0),
@@ -348,7 +131,7 @@ class _AppShellState extends State<AppShell> {
                                 child: Row(
                                   children: [
                                     label(
-                                      names[c.page],
+                                      _pageNames[c.page],
                                       size: 25,
                                       weight: FontWeight.w600,
                                     ),
@@ -603,6 +386,204 @@ class _AppShellState extends State<AppShell> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _Sidebar extends StatefulWidget {
+  final AppController c;
+  const _Sidebar(this.c);
+
+  @override
+  State<_Sidebar> createState() => _SidebarState();
+}
+
+class _SidebarState extends State<_Sidebar> {
+  bool collapsed = false;
+  static const icons = [
+    LucideIcons.chartNoAxesCombined,
+    LucideIcons.layoutGrid,
+    LucideIcons.userRound,
+    LucideIcons.bell,
+    LucideIcons.settings,
+  ];
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.c;
+    return Container(
+      width: collapsed ? 70 : 202,
+      decoration: BoxDecoration(
+        color: themeColor(context, C.side),
+        border: Border(
+          right: BorderSide(
+            color: themeColor(context, Color(0xFFDAD8E2)),
+            width: .5,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 16, top: 8, bottom: 19),
+            child: IconButton(
+              tooltip: AppLocale.text(context, collapsed ? '展开侧栏' : '收起侧栏'),
+              onPressed: () => setState(() => collapsed = !collapsed),
+              icon: Icon(
+                LucideIcons.panelLeft,
+                size: 18,
+                color: themeColor(context, C.muted),
+              ),
+            ),
+          ),
+          for (var i = 0; i < _pageNames.length; i++)
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 0, 10, 7),
+              child: Semantics(
+                selected: c.page == i,
+                button: true,
+                label: AppLocale.text(context, _pageNames[i]),
+                child: Material(
+                  color: c.page == i
+                      ? themeColor(context, Color(0xFFD8D6E1))
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => c.navigate(i),
+                    child: Container(
+                      height: 45,
+                      decoration: BoxDecoration(
+                        border: c.page == i
+                            ? Border(
+                                left: BorderSide(
+                                  color: themeColor(context, C.blue),
+                                  width: 3,
+                                ),
+                              )
+                            : null,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: collapsed ? 11 : 16,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            icons[i],
+                            size: 20,
+                            color: themeColor(context, C.ink),
+                          ),
+                          if (!collapsed) ...[
+                            SizedBox(width: 14),
+                            Expanded(
+                              child: label(
+                                _pageNames[i],
+                                weight: c.page == i
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          Spacer(),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              collapsed ? 4 : 18,
+              0,
+              collapsed ? 4 : 10,
+              20,
+            ),
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final compact = collapsed || box.maxWidth < 135;
+                final storage = InkWell(
+                  onTap: () => c.navigate(4),
+                  child: SizedBox(
+                    height: 36,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          LucideIcons.hardDrive,
+                          size: 18,
+                          color: themeColor(context, C.muted),
+                        ),
+                        if (!compact) ...[
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: label(
+                              '本地保存',
+                              size: 12,
+                              color: themeColor(context, C.muted),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+                final update = c.availableUpdate;
+                final download = update == null
+                    ? null
+                    : Tooltip(
+                        message: '${c.strings.text("下载更新")} ${update.tag}',
+                        child: SizedBox(
+                          width: compact ? 34 : 62,
+                          height: 34,
+                          child: TextButton(
+                            key: const ValueKey('sidebar-update'),
+                            onPressed: () => NativeBridge.call('openUrl', {
+                              'url': (update.download ?? update.page)
+                                  .toString(),
+                            }),
+                            style: TextButton.styleFrom(
+                              backgroundColor: themeColor(
+                                context,
+                                C.blue,
+                              ).withValues(alpha: .12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                              ),
+                            ),
+                            child: FittedBox(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(LucideIcons.download, size: 15),
+                                  if (!compact) ...[
+                                    const SizedBox(width: 3),
+                                    const LocalizedText('更新'),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                if (compact) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [storage, ?download],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: storage),
+                    ?download,
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

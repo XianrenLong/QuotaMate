@@ -24,15 +24,11 @@ Widget split(List<Widget> children, {List<int>? flex}) => Row(
     ],
   ],
 );
-Widget canvas(Widget Function(double height) builder, {double minimum = 650}) =>
-    LayoutBuilder(
-      builder: (context, c) => SingleChildScrollView(
-        child: SizedBox(
-          height: math.max(minimum, c.maxHeight),
-          child: builder(math.max(minimum, c.maxHeight)),
-        ),
-      ),
-    );
+Widget canvas(Widget child, {double minimum = 650}) => LayoutBuilder(
+  builder: (context, c) => SingleChildScrollView(
+    child: SizedBox(height: math.max(minimum, c.maxHeight), child: child),
+  ),
+);
 String money(UsageSummary s) {
   if (s.events.isEmpty) return '暂无可计价记录';
   final cost = s.knownCost;
@@ -129,7 +125,7 @@ class _OverviewPageState extends State<OverviewPage> {
     final secondary = c.account?.secondary;
     final weekly = c.presentedQuota(secondary)?.remaining;
     return canvas(
-      (height) => Column(
+      Column(
         children: [
           SizedBox(
             height: 180,
@@ -360,7 +356,7 @@ class AccountsPage extends StatelessWidget {
   const AccountsPage(this.c, {super.key});
   @override
   Widget build(BuildContext context) => canvas(
-    (height) => split(
+    split(
       [
         Column(
           children: [
@@ -858,7 +854,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
       );
     }
     return canvas(
-      (height) => Column(
+      Column(
         children: [
           if (c.isClaude) ...[_claudeTabs(c), const SizedBox(height: 8)],
           SizedBox(height: 51, child: PeriodStrip(c, statistics: true)),
