@@ -76,6 +76,12 @@ class PeriodStrip extends StatelessWidget {
               ),
             ),
           ),
+          if (c.historicalDay != null)
+            IconButton(
+              tooltip: AppLocale.text(context, '清除日期筛选'),
+              onPressed: () => c.selectUsageDay(null),
+              icon: const Icon(LucideIcons.x, size: 16),
+            ),
           SizedBox(width: 12),
           if (!c.isClaude || !c.claudeQuotaTab)
             IconButton(
@@ -100,6 +106,7 @@ class PeriodStrip extends StatelessWidget {
     final start = c.rangeStart;
     String date(DateTime d) =>
         '${d.year}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')}';
+    if (c.historicalDay != null) return date(start);
     return '${date(start)} — ${date(c.rangeEnd)}';
   }
 }
@@ -839,7 +846,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   @override
   Widget build(BuildContext context) {
     final c = widget.c;
-    final s = c.summary;
+    final s = UsageSummary(c.statisticsEvents);
     if (c.isClaude && c.claudeQuotaTab) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -905,7 +912,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   padding: EdgeInsets.all(12),
                   child: Column(
                     children: [
-                      MiniHeading('每日用量 · 近30天', trailing: ChipLabel('Token')),
+                      MiniHeading(
+                        '每日用量 · 近30天',
+                        trailing: label('点击日期查看明细', size: 11),
+                      ),
                       SizedBox(height: 10),
                       Expanded(
                         child: !c.hasTrendRecords
@@ -916,7 +926,15 @@ class _StatisticsPageState extends State<StatisticsPage> {
                                     : '最近30天没有本机用量记录。',
                                 onTap: c.isClaude ? () => c.navigate(4) : null,
                               )
-                            : UsageChart(c.values(), c.now, showDates: false),
+                            : UsageChart(
+                                c.values(usageFilters: true),
+                                c.now,
+                                selectedDay: c.historicalDay,
+                                onSelectDay: (day) {
+                                  setState(() => sessions = true);
+                                  c.selectUsageDay(day);
+                                },
+                              ),
                       ),
                     ],
                   ),
@@ -958,9 +976,18 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       Segments(
                         ['用量明细', '项目用量 ${s.projects}'],
                         sessions ? 0 : 1,
-                        (i) => setState(() => sessions = i == 0),
+                        (i) {
+                          setState(() => sessions = i == 0);
+                          if (i == 1) c.selectUsageProject(null);
+                        },
                       ),
-                      Spacer(),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: _modelFilter(context, c),
+                        ),
+                      ),
                       TextButton.icon(
                         onPressed: () => c.export(),
                         icon: Icon(LucideIcons.share, size: 16),
@@ -968,6 +995,25 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       ),
                     ],
                   ),
+                  if (c.usageProject case final project?)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: InputChip(
+                        deleteIcon: const Icon(LucideIcons.x, size: 15),
+                        label: Text(
+                          project.isEmpty
+                              ? AppLocale.text(context, '未记录项目')
+                              : projectName(project),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        tooltip: project.isEmpty ? null : project,
+                        deleteButtonTooltipMessage: AppLocale.text(
+                          context,
+                          '清除项目筛选',
+                        ),
+                        onDeleted: () => c.selectUsageProject(null),
+                      ),
+                    ),
                   SizedBox(height: 7),
                   Expanded(child: _table(context, c, s)),
                 ],
@@ -977,6 +1023,45 @@ class _StatisticsPageState extends State<StatisticsPage> {
         ],
       ),
       minimum: c.isClaude ? 650 : 560,
+    );
+  }
+
+  Widget _modelFilter(BuildContext context, AppController c) {
+    final models = c.usageModels;
+    return PopupMenuButton<({String? model})>(
+      tooltip: AppLocale.text(context, '按模型筛选'),
+      onSelected: (selection) => c.selectUsageModel(selection.model),
+      itemBuilder: (_) => [
+        CheckedPopupMenuItem(
+          value: (model: null),
+          checked: c.usageModel == null,
+          child: const LocalizedText('全部模型'),
+        ),
+        for (final model in models)
+          CheckedPopupMenuItem(
+            value: (model: model),
+            checked: c.usageModel == model,
+            child: Text(model),
+          ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(LucideIcons.listFilter, size: 16),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                c.usageModel ?? AppLocale.text(context, '全部模型'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(LucideIcons.chevronDown, size: 16),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1025,27 +1110,36 @@ class _StatisticsPageState extends State<StatisticsPage> {
     ),
   );
   Widget _table(BuildContext context, AppController c, UsageSummary summary) {
+    final filtered =
+        c.usageProject != null ||
+        c.usageModel != null ||
+        c.historicalDay != null;
+    final emptyMessage = filtered
+        ? '当前筛选没有记录，请调整项目、模型或日期。'
+        : c.isClaude
+        ? c.claudeEmptyUsageText
+        : null;
+    final VoidCallback? onEmpty = !filtered && c.isClaude
+        ? () => c.navigate(4)
+        : null;
     if (sessions) {
       return UsageDetailsTable(
         events: summary.events,
+        showDay: c.days > 1 && c.historicalDay == null,
         onSelect: (e) => showSession(context, e),
-        emptyMessage: c.isClaude ? c.claudeEmptyUsageText : null,
-        onEmptyTap: c.isClaude ? () => c.navigate(4) : null,
+        emptyMessage: emptyMessage,
+        onEmptyTap: onEmpty,
       );
     }
     if (summary.events.isEmpty) {
-      return EmptyState(
-        '暂无记录',
-        c.isClaude ? c.claudeEmptyUsageText : '真实用量会在同步后显示。',
-        onTap: c.isClaude ? () => c.navigate(4) : null,
-      );
+      return EmptyState('暂无记录', emptyMessage ?? '真实用量会在同步后显示。', onTap: onEmpty);
     }
     final projects = summary.grouped.entries.toList()
       ..sort(
         (a, b) =>
             UsageSummary(b.value).total.compareTo(UsageSummary(a.value).total),
       );
-    final rows = sessions ? summary.events.take(100).toList() : projects;
+
     Widget cells(List<Widget> children, {bool header = false}) => Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
@@ -1072,27 +1166,21 @@ class _StatisticsPageState extends State<StatisticsPage> {
     return Column(
       children: [
         cells([
-          for (final t in [
-            sessions ? '会话 / 项目' : '项目',
-            sessions ? '时间' : '记录次数',
-            '输入 Token',
-            '输出 Token',
-            '成本估算',
-          ])
+          for (final t in ['项目', '记录次数', '输入 Token', '输出 Token', '成本估算'])
             label(t, size: 11, color: themeColor(context, C.muted)),
         ], header: true),
         Expanded(
           child: ListView.builder(
-            itemCount: rows.length,
+            itemCount: projects.length,
             itemBuilder: (_, i) {
-              final e = sessions ? rows[i] as UsageEvent : null;
-              final entry = sessions
-                  ? null
-                  : rows[i] as MapEntry<String, List<UsageEvent>>;
-              final s = UsageSummary(e == null ? entry!.value : [e]);
-              final name = projectName(e?.project ?? entry!.key);
+              final entry = projects[i];
+              final s = UsageSummary(entry.value);
+              final name = projectName(entry.key);
               return InkWell(
-                onTap: () => showSession(context, e ?? entry!.value.first),
+                onTap: () {
+                  setState(() => sessions = true);
+                  c.selectUsageProject(entry.key);
+                },
                 child: cells([
                   Row(
                     children: [
@@ -1103,18 +1191,19 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       ),
                       SizedBox(width: 10),
                       Expanded(
-                        child: label(
-                          name,
-                          size: 12,
-                          localize: (e?.project ?? entry!.key).isEmpty,
+                        child: LocalizedTooltip(
+                          message: entry.key.isEmpty ? '未记录项目' : entry.key,
+                          localize: entry.key.isEmpty,
+                          child: label(
+                            name,
+                            size: 12,
+                            localize: entry.key.isEmpty,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  label(
-                    e == null ? '${s.requests}' : clockText(e.at),
-                    size: 12,
-                  ),
+                  label('${s.requests}', size: 12),
                   label(compact(s.input), size: 12),
                   label(compact(s.output), size: 12),
                   label(

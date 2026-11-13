@@ -234,6 +234,42 @@ class AppController extends ChangeNotifier {
       (account?.availableQuotaResets ?? 0) > 0;
   bool claudeQuotaTab = true;
   DateTime? historicalDay;
+  String? usageProject, usageModel;
+
+  bool _matchesUsageFilters(UsageEvent event) =>
+      (usageProject == null || event.project == usageProject) &&
+      (usageModel == null || event.model == usageModel);
+
+  List<UsageEvent> get statisticsEvents =>
+      events.where(_matchesUsageFilters).toList();
+
+  List<String> get usageModels => {
+    ?usageModel,
+    for (final event in events)
+      if (usageProject == null || event.project == usageProject) event.model,
+  }.toList()..sort();
+
+  void selectUsageProject(String? project) {
+    usageProject = project;
+    _notify();
+  }
+
+  void selectUsageModel(String? model) {
+    usageModel = model;
+    _notify();
+  }
+
+  void selectUsageDay(DateTime? day) {
+    historicalDay = day;
+    _notify();
+  }
+
+  void _clearUsageFilters() {
+    historicalDay = null;
+    usageProject = null;
+    usageModel = null;
+  }
+
   List<AccountSnapshot> _samples = [];
   String? _sampleScope;
   DateTime get rangeEnd => historicalDay == null
@@ -251,7 +287,10 @@ class AppController extends ChangeNotifier {
   List<UsageEvent> get events {
     final start = rangeStart, end = rangeEnd;
     return all
-        .where((e) => !e.at.isBefore(start) && !e.at.isAfter(end))
+        .where(
+          (e) =>
+              !e.at.isBefore(start) && !e.at.isAfter(end) && !e.at.isAfter(now),
+        )
         .toList();
   }
 
@@ -274,7 +313,7 @@ class AppController extends ChangeNotifier {
   }
 
   void selectClaudeStatistics(bool quota) {
-    historicalDay = null;
+    _clearUsageFilters();
     claudeQuotaTab = quota;
     _notify();
   }
@@ -413,10 +452,15 @@ class AppController extends ChangeNotifier {
     return all.any((e) => !e.at.isBefore(start) && !e.at.isAfter(now));
   }
 
-  List<double> values({bool requests = false, int period = trendDays}) {
+  List<double> values({
+    bool requests = false,
+    int period = trendDays,
+    bool usageFilters = false,
+  }) {
     final start = DateTime.utc(now.year, now.month, now.day - period + 1);
     final result = List<double>.filled(period, 0);
     for (final e in all) {
+      if (usageFilters && !_matchesUsageFilters(e)) continue;
       final day = e.at.toLocal();
       final d = DateTime.utc(
         day.year,
@@ -487,7 +531,7 @@ class AppController extends ChangeNotifier {
 
   void _load({bool resetAccount = true}) {
     if (resetAccount) {
-      historicalDay = null;
+      _clearUsageFilters();
       _samples = [];
       _sampleScope = null;
     }
@@ -821,7 +865,7 @@ class AppController extends ChangeNotifier {
   }
 
   void navigate(int index) {
-    if (page != index) historicalDay = null;
+    if (page != index) _clearUsageFilters();
     page = index;
     message = null;
     _notify();
@@ -1313,7 +1357,7 @@ class AppController extends ChangeNotifier {
     final lines = <String>[
       strings.text('时间,模型,成本（USD估算）,新增输入,输出,缓存命中,速度（tok/s）,首字（秒）,计时是否估算'),
     ];
-    for (final e in events) {
+    for (final e in page == 0 ? statisticsEvents : events) {
       lines.add(
         [
           cell(e.at.toIso8601String()),
