@@ -630,6 +630,13 @@ const _english = <String, String>{
   '自动检查更新': 'Automatically check for updates',
   '启动时及运行期间每 6 小时检查 GitHub 版本。有新版本时，侧栏左下角显示下载按钮。': 'Checks GitHub at launch and every six hours while running. A download button appears at the bottom of the sidebar when an update is available.',
   '更新': 'Update',
+  '清除日期筛选': 'Clear date filter',
+  '清除项目筛选': 'Clear project filter',
+  '按模型筛选': 'Filter by model',
+  '全部模型': 'All models',
+  '点击日期查看明细': 'Select a day for details',
+  '当前筛选没有记录，请调整项目、模型或日期。':
+      'No matching records. Change the project, model or date.',
   '暂无采样': 'No samples',
   '暂无额度数据': 'No limit data',
   '打开主窗口': 'Open QuotaMate',

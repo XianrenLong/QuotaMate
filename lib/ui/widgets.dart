@@ -350,6 +350,8 @@ class UsageChart extends StatelessWidget {
   final List<double> values;
   final DateTime now;
   final bool mini, requests, showDates;
+  final ValueChanged<DateTime>? onSelectDay;
+  final DateTime? selectedDay;
   const UsageChart(
     this.values,
     this.now, {
@@ -357,6 +359,8 @@ class UsageChart extends StatelessWidget {
     this.mini = false,
     this.requests = false,
     this.showDates = true,
+    this.onSelectDay,
+    this.selectedDay,
   });
   @override
   Widget build(BuildContext context) {
@@ -384,6 +388,19 @@ class UsageChart extends StatelessWidget {
     return LineChart(
       LineChartData(
         minY: 0,
+        extraLinesData: ExtraLinesData(
+          verticalLines: [
+            if (selectedDay != null)
+              for (var index = 0; index < values.length; index++)
+                if (DateUtils.isSameDay(_dayAt(index), selectedDay))
+                  VerticalLine(
+                    x: index.toDouble(),
+                    color: themeColor(context, C.blue),
+                    strokeWidth: 1.5,
+                    dashArray: [4, 3],
+                  ),
+          ],
+        ),
         maxY: maxY,
         minX: 0,
         maxX: math.max(1, values.length - 1).toDouble(),
@@ -405,6 +422,14 @@ class UsageChart extends StatelessWidget {
         ),
         lineTouchData: LineTouchData(
           enabled: !mini,
+          touchCallback: onSelectDay == null
+              ? null
+              : (event, response) {
+                  final spot = response?.lineBarSpots?.firstOrNull;
+                  if (event is FlTapUpEvent && spot != null) {
+                    onSelectDay!(_dayAt(spot.spotIndex));
+                  }
+                },
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (_) => themeColor(context, C.blue),
             getTooltipItems: (spots) => spots
@@ -412,7 +437,7 @@ class UsageChart extends StatelessWidget {
                   (s) => LineTooltipItem(
                     AppLocale.text(
                       context,
-                      '${showDates ? '' : '${_dateFor(s.x.round())}\n'}${requests ? '${s.y.toInt()} 次' : compact(s.y)}',
+                      '${showDates && onSelectDay == null ? '' : '${_dateFor(s.x.round())}\n'}${requests ? '${s.y.toInt()} 次' : compact(s.y)}',
                     ),
                     TextStyle(color: Colors.white, fontSize: 12),
                   ),
@@ -489,9 +514,12 @@ class UsageChart extends StatelessWidget {
     );
   }
 
+  DateTime _dayAt(int index) =>
+      DateTime(now.year, now.month, now.day - values.length + 1 + index);
+
   String _dateFor(int index) {
     final i = index.clamp(0, math.max(0, values.length - 1)).toInt();
-    final d = DateTime(now.year, now.month, now.day - values.length + 1 + i);
+    final d = _dayAt(i);
     return '${d.month}/${d.day}';
   }
 }

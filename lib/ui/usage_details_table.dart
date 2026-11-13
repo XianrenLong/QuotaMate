@@ -10,12 +10,14 @@ import 'localized.dart';
 class UsageDetailsTable extends StatefulWidget {
   final List<UsageEvent> events;
   final ValueChanged<UsageEvent> onSelect;
+  final bool showDay;
   final String? emptyMessage;
   final VoidCallback? onEmptyTap;
   const UsageDetailsTable({
     super.key,
     required this.events,
     required this.onSelect,
+    this.showDay = false,
     this.emptyMessage,
     this.onEmptyTap,
   });
@@ -124,12 +126,18 @@ class _UsageDetailsTableState extends State<UsageDetailsTable> {
                         itemCount: widget.events.length,
                         itemBuilder: (context, index) {
                           final e = widget.events[index];
+                          final at = e.at.toLocal();
                           return InkWell(
                             onTap: () => widget.onSelect(e),
                             child: row([
                               LocalizedTooltip(
                                 message: e.at.toLocal().toString(),
-                                child: label(detailTime(e.at), size: 13),
+                                child: label(
+                                  widget.showDay
+                                      ? '${at.month}/${at.day} ${clockText(at)}'
+                                      : detailTime(at),
+                                  size: 13,
+                                ),
                               ),
                               LocalizedTooltip(
                                 message: e.model,
