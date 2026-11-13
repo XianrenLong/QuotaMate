@@ -2,7 +2,7 @@
 
 **Windows 用户请先看 [Windows 使用指南](windows.md)。以下安装步骤适用于 macOS。**
 
-[返回项目首页](../README.md) · [直接下载 macOS DMG](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.32-alpha/QuotaMate-0.1.32-macos-universal.dmg) · [版本说明](https://github.com/XianrenLong/QuotaMate/releases/tag/v0.1.32-alpha)
+[返回项目首页](../README.md) · [直接下载 macOS DMG](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.33-alpha/QuotaMate-0.1.33-macos-universal.dmg) · [版本说明](https://github.com/XianrenLong/QuotaMate/releases/tag/v0.1.33-alpha)
 
 这份指南面向第一次安装的用户。QuotaMate 用于整理支持的本机 AI 用量，不提供模型对话，也不会因登录就同步所有云端聊天历史。
 
@@ -21,10 +21,10 @@
 
 ## 下载与安装
 
-1. 点击 **[直接下载 DMG](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.32-alpha/QuotaMate-0.1.32-macos-universal.dmg)**，保存到下载文件夹。
+1. 点击 **[直接下载 DMG](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.33-alpha/QuotaMate-0.1.33-macos-universal.dmg)**，保存到下载文件夹。
 2. 双击打开 DMG，将 **QuotaMate** 拖到 **Applications / 应用程序**。
 3. 从「应用程序」启动；若已安装旧版，先退出旧版再替换。
-4. 不想使用 DMG 时，可 [下载 ZIP](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.32-alpha/QuotaMate-0.1.32-macos-universal.zip)，解压后把 `QuotaMate.app` 放到「应用程序」。
+4. 不想使用 DMG 时，可 [下载 ZIP](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.33-alpha/QuotaMate-0.1.33-macos-universal.zip)，解压后把 `QuotaMate.app` 放到「应用程序」。
 
 安装包是 Alpha 开发测试包，仅有 ad-hoc 本地签名，未使用 Apple Developer ID 签名或公证。是否运行由你自行决定。
 
@@ -38,10 +38,10 @@
 
 ### 可选：检查下载是否完整
 
-将 [SHA256SUMS](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.32-alpha/SHA256SUMS) 与下载文件放在同一目录。在终端进入该目录后执行：
+将 [SHA256SUMS](https://github.com/XianrenLong/QuotaMate/releases/download/v0.1.33-alpha/SHA256SUMS) 与下载文件放在同一目录。在终端进入该目录后执行：
 
 ```sh
-shasum -a 256 QuotaMate-0.1.32-macos-universal.dmg
+shasum -a 256 QuotaMate-0.1.33-macos-universal.dmg
 ```
 
 将输出与 `SHA256SUMS` 中同名文件的值比较。若同时下载了 DMG 和 ZIP，也可执行 `shasum -a 256 -c SHA256SUMS` 一次检查两者；只下载一个时，完整清单会提示另一个文件缺失。校验值仅用于检查文件一致性，不等于 Apple 公证或安全认证。
@@ -57,10 +57,12 @@ shasum -a 256 QuotaMate-0.1.32-macos-universal.dmg
 | **统计** | 默认显示今日，可选近 7 天或近 30 天；查看明细、缓存、成本和项目 |
 | **总览** | 查看账号、可用额度或快照、恢复时间及近期本机用量 |
 | **账号** | 核对所选数据目录对应的身份、订阅与来源；切换查看独立数据源 |
-| **提醒** | 配置基于可用额度信息的提醒；历史快照不作为当前实时额度触发提醒 |
+| **提醒** | 开启 GPT 低额度通知、选择剩余额度阈值，也可开启额度恢复通知 |
 | **设置** | 语言、主题、目录、工具路径、刷新和参考价格 |
 
 预览使用七天合成数据。你的软件启动仍默认显示今日；没有当天记录时先看其他时间范围。
+
+在「提醒」页开启「低额度通知」并允许系统通知后，可选「额度恢复通知」。例如，阈值设为 20%，周额度剩余 18% 时会收到低额度提醒。之后同步到同一账号周额度剩余 85%，会收到一次恢复通知。应用在运行时按刷新间隔检查，手动刷新也会检查。只有新的额度读数能确认恢复，Claude 的本机历史快照仅供查看。
 
 <a id="connect-gpt"></a>
 

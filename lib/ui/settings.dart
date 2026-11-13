@@ -33,8 +33,17 @@ class AlertsPage extends StatelessWidget {
               SizedBox(height: 20),
               settingRow(
                 '低额度通知',
-                '额度低于阈值时，通过系统通知提醒。',
+                'GPT 剩余额度达到或低于阈值时，通过系统通知提醒。',
                 trailing: Toggle(c.notifications, (v) => c.setNotifications(v)),
+              ),
+              Divider(height: 28),
+              settingRow(
+                '额度恢复通知',
+                '收到低额度读数后，重新同步确认该窗口高于阈值时提醒。',
+                trailing: Toggle(
+                  c.notifications && c.recoveryNotifications,
+                  c.notifications ? c.setRecoveryNotifications : null,
+                ),
               ),
               Divider(height: 28),
               Row(
@@ -56,7 +65,7 @@ class AlertsPage extends StatelessWidget {
                   Segments(
                     ['10%', '20%', '30%'],
                     [10, 20, 30].indexOf(c.threshold),
-                    (i) => c.setting(() => c.threshold = [10, 20, 30][i]),
+                    (i) => c.setAlertThreshold([10, 20, 30][i]),
                   ),
                 ],
               ),
@@ -77,7 +86,7 @@ class AlertsPage extends StatelessWidget {
                     SizedBox(width: 15),
                     Expanded(
                       child: label(
-                        '同一额度窗口只提醒一次。演示数据和过期快照不会触发通知。',
+                        'Claude 额度来自本机快照。系统通知仅使用 GPT 同步确认的额度。',
                         size: 12,
                         color: themeColor(context, C.muted),
                         lines: 2,
@@ -126,30 +135,9 @@ class AlertsPage extends StatelessWidget {
             children: [
               MiniHeading('当前恢复时间', icon: LucideIcons.clock3),
               SizedBox(height: 20),
-              settingRow(
-                '当前窗口',
-                c.account?.primary == null
-                    ? '尚未获取恢复时间'
-                    : '${countdown(c.account!.primary!.resets, c.now)}后重置',
-                trailing: ChipLabel(
-                  c.quotaValid
-                      ? '${c.account!.primary!.remaining}% 剩余'
-                      : '暂不可用',
-                ),
-              ),
+              _resetRow(false),
               Divider(height: 25),
-              settingRow(
-                weeklyLabel(c.account?.secondary),
-                c.account?.secondary == null
-                    ? '尚未获取恢复时间'
-                    : countdown(c.account!.secondary!.resets, c.now),
-                trailing: ChipLabel(
-                  c.account?.secondary == null ||
-                          c.account!.secondary!.expired(c.now)
-                      ? '暂不可用'
-                      : '${c.account!.secondary!.remaining}% 剩余',
-                ),
-              ),
+              _resetRow(true),
             ],
           ),
         ),
@@ -177,9 +165,26 @@ class AlertsPage extends StatelessWidget {
       ],
     ),
   );
+
+  Widget _resetRow(bool secondary) {
+    final raw = secondary ? c.account?.secondary : c.account?.primary;
+    final window = c.presentedQuota(raw);
+    return settingRow(
+      quotaWindowLabel(raw, secondary: secondary),
+      window?.resets == null
+          ? '尚未获取恢复时间'
+          : '${countdown(window!.resets, c.now)}后重置',
+      trailing: ChipLabel(
+        window == null
+            ? '暂不可用'
+            : c.stale
+            ? '历史快照剩余 ${window.remaining}%'
+            : '${window.remaining}% 剩余',
+      ),
+    );
+  }
 }
 
-String weeklyLabel(QuotaWindow? w) => w?.minutes == 10080 ? '本周窗口' : '5 小时窗口';
 Widget settingRow(
   String title,
   String caption, {

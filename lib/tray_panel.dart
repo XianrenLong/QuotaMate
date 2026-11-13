@@ -80,12 +80,6 @@ String _ago(Duration age, String Function(String) t, DateTime now) =>
     ? t('刚刚')
     : t('${countdown(now.add(age), now)}前');
 
-String _windowName(QuotaWindow w, bool secondary) => switch (w.minutes) {
-  300 => '5 小时窗口',
-  10080 => '每周窗口',
-  _ => secondary ? '5 小时窗口' : '当前窗口',
-};
-
 Map<String, dynamic>? _window(AppController c, bool secondary) {
   final t = c.strings.text;
   final w = c.presentedQuota(
@@ -94,7 +88,7 @@ Map<String, dynamic>? _window(AppController c, bool secondary) {
   if (w == null) return null;
   final f = c.forecast(secondary: secondary);
   return {
-    'label': t(_windowName(w, secondary)),
+    'label': t(quotaWindowLabel(w, secondary: secondary)),
     'remaining': w.remaining,
     'unit': t('剩余'),
     'value': t('${w.remaining}% 剩余'),

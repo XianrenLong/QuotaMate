@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 import UserNotifications
 import SwiftUI
 
-class MainFlutterWindow: NSWindow {
+class MainFlutterWindow: NSWindow, UNUserNotificationCenterDelegate {
   private var bridge: FlutterMethodChannel!
   private var statusItem: NSStatusItem!
   private let panel = TrayPanelModel()
@@ -25,11 +25,19 @@ class MainFlutterWindow: NSWindow {
     isMovableByWindowBackground = true
     isReleasedWhenClosed = false
     RegisterGeneratedPlugins(registry: controller)
+    UNUserNotificationCenter.current().delegate = self
     bridge = FlutterMethodChannel(name: "dev.quotamate/native", binaryMessenger: controller.engine.binaryMessenger)
     bridge.setMethodCallHandler { [weak self] call, result in self?.handle(call, result) }
     setupTray()
     super.awakeFromNib()
   }
+
+  func userNotificationCenter(_ center: UNUserNotificationCenter,
+                              willPresent notification: UNNotification,
+                              withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    completionHandler([.banner, .list])
+  }
+
   private func setupTray() {
     statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     statusItem.button?.image = NSImage(systemSymbolName: "hourglass", accessibilityDescription: "QuotaMate")
@@ -133,7 +141,10 @@ class MainFlutterWindow: NSWindow {
     case "requestNotifications": UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in DispatchQueue.main.async { result(granted) } }
     case "notify":
       let content = UNMutableNotificationContent(); content.title = args["title"] as? String ?? (english ? "Limit alert" : "额度提醒"); content.body = args["body"] as? String ?? ""
-      UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: args["id"] as? String ?? UUID().uuidString, content: content, trigger: nil)); result(nil)
+      let request = UNNotificationRequest(identifier: args["id"] as? String ?? UUID().uuidString, content: content, trigger: nil)
+      UNUserNotificationCenter.current().add(request) { error in
+        DispatchQueue.main.async { result(error == nil) }
+      }
     default: result(FlutterMethodNotImplemented)
     }
   }
